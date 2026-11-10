@@ -1,7 +1,7 @@
 {
  "name": "SONIQ",
  "short_name": "SONIQ",
- "description": "תיאוריה שרואים על הכלי ושומעים באוזן",
+ "description": "תיאוריה שרואים על הכלי ושומעים באוזן. מפת אקורדים וסולמות, תרגול ואימון שמיעה, טיונר, מטרונום ואלתור.",
  "lang": "he",
  "dir": "rtl",
  "start_url": "./",
@@ -19,6 +19,55 @@
    "sizes": "512x512",
    "type": "image/png",
    "purpose": "any"
+  }
+ ],
+ "id": "./",
+ "scope": "./",
+ "orientation": "any",
+ "categories": [
+  "music",
+  "education"
+ ],
+ "shortcuts": [
+  {
+   "name": "מפה",
+   "url": "./#map",
+   "icons": [
+    {
+     "src": "icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  },
+  {
+   "name": "תרגול",
+   "url": "./#practice",
+   "icons": [
+    {
+     "src": "icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  },
+  {
+   "name": "טיונר ומטרונום",
+   "url": "./#tools",
+   "icons": [
+    {
+     "src": "icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  },
+  {
+   "name": "אלתור",
+   "url": "./#jam",
+   "icons": [
+    {
+     "src": "icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
   }
  ]
 }
