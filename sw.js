@@ -12,7 +12,6 @@ const PRECACHE = [
  "icon-180.png",
  "icon-192.png",
  "icon-512.png",
- "icons/nav-map-fretboard.svg", "icons/nav-practice-target.svg", "icons/nav-tuner.svg", "icons/nav-metronome.svg", "icons/nav-jam-wave.svg", "icons/nav-settings-gear.svg",
  "icons/icon-bass.svg",
  "icons/icon-clock.svg",
  "icons/icon-guitar.svg",
