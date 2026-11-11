@@ -334,7 +334,15 @@ html.sheet-open, html.sheet-open body { overflow: hidden; }
 .welcome-opts .inst-art { width: 84px; height: 84px; overflow: visible; transition: transform var(--t-mid) var(--ease); }
 .welcome-opts button { overflow: hidden; }
 .welcome-opts button:hover .inst-art, .welcome-opts button:focus-visible .inst-art { transform: scale(1.08) rotate(-3deg); }
-.welcome-opts button { min-height: 140px; }
+.welcome-opts button { min-height: 140px; min-width: 0; }
+/* the instrument art scales with its card, so it is never cut off on narrow phones */
+.welcome-opts .inst-art { width: min(84px, 100%); height: auto; aspect-ratio: 1; max-width: 100%; }
+.welcome-opts button { overflow: visible; overflow-wrap: anywhere; text-align: center; line-height: 1.2; }
+@media (max-width: 480px) {
+  .welcome { padding: var(--s5) var(--s4); }
+  .welcome-opts { gap: var(--s2); }
+  .welcome-opts button { padding: var(--s3) var(--s1); min-height: 124px; }
+}
 /* calmer layout: panels that open on demand */
 .toolbar .push { margin-inline-start: auto; }
 .btn-ico { display: inline-flex; align-items: center; gap: var(--s2); }
