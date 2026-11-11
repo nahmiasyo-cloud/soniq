@@ -1,3 +1,3 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E76A00"/><stop offset="0.32" stop-color="#F4B433"/><stop offset="0.66" stop-color="#8B1E6B"/><stop offset="1" stop-color="#1EA7A1"/></linearGradient></defs>
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9B6CFF"/><stop offset="0.32" stop-color="#E2D4FF"/><stop offset="0.66" stop-color="#5B34B8"/><stop offset="1" stop-color="#B794FF"/></linearGradient></defs>
 <g fill="none" stroke="url(#g)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"><path d="M300 80V330C300 385 250 420 190 420C145 420 110 395 110 360C110 315 155 285 210 285C245 285 270 295 300 315 M300 80L420 55V300"/></g></svg>

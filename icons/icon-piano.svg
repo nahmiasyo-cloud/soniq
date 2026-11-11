@@ -1,3 +1,3 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E76A00"/><stop offset="0.32" stop-color="#F4B433"/><stop offset="0.66" stop-color="#8B1E6B"/><stop offset="1" stop-color="#1EA7A1"/></linearGradient></defs>
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9B6CFF"/><stop offset="0.32" stop-color="#E2D4FF"/><stop offset="0.66" stop-color="#5B34B8"/><stop offset="1" stop-color="#B794FF"/></linearGradient></defs>
 <g fill="none" stroke="url(#g)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"><rect x="65" y="125" width="382" height="250" rx="18"/><path d="M65 300H447 M130 125V300 M195 125V300 M260 125V300 M325 125V300 M390 125V300"/><path d="M112 125V250H150V125 M177 125V250H215V125 M307 125V250H345V125 M372 125V250H410V125" fill="currentColor"/></g></svg>
