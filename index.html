@@ -347,7 +347,7 @@ html.sheet-open, html.sheet-open body { overflow: hidden; }
 .welcome-opts button { min-height: 140px; min-width: 0; }
 /* the instrument art scales with its card, so it is never cut off on narrow phones */
 .welcome-opts .inst-art { width: min(84px, 100%); height: auto; aspect-ratio: 1; max-width: 100%; }
-.welcome-opts button { overflow: visible; overflow-wrap: anywhere; text-align: center; line-height: 1.2; }
+.welcome-opts button { overflow: visible; overflow-wrap: break-word; hyphens: auto; text-align: center; line-height: 1.2; }
 @media (max-width: 480px) {
   .welcome { padding: var(--s5) var(--s4); }
   .welcome-opts { gap: var(--s2); }
@@ -710,10 +710,11 @@ body[data-level="beginner"] .rn { display: none; }
 .lib-all { display: block; margin: var(--s4) auto 0; }
 .welcome-opts small { display: block; font-weight: 400; font-size: var(--fs-s); color: var(--muted); line-height: 1.35; }
 .welcome-opts.levels button { min-height: 0; padding: var(--s4) var(--s3); }
-.lang-pick { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s2); margin-bottom: var(--s3); }
-.lang-pick button { min-height: 44px; padding: 0 var(--s3); border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--muted); font: inherit; font-size: var(--fs-s); cursor: pointer; }
-.lang-pick button[aria-pressed="true"] { color: var(--text); border-color: var(--accent); background: var(--surface-2); }
-.lang-pick button:hover, .lang-pick button:focus-visible { color: var(--text); border-color: var(--accent); }
+.lang-pick { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--s2) var(--s3); margin-bottom: var(--s3); }
+.lang-pick label { display: inline-flex; align-items: center; gap: var(--s2); color: var(--muted); font-size: var(--fs-s); font-weight: 600; }
+.lang-pick .ico { width: 20px; height: 20px; }
+.lang-select { min-height: 44px; min-width: 9rem; padding-inline: var(--s4); border: 1px solid var(--border); font-size: var(--fs-s); }
+.lang-select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 /* free and Pro: a small lock on what needs Pro */
 .pro-lock { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); color: var(--accent-soft); flex: none; vertical-align: -4px; }
 .pro-lock svg { width: 11px; height: 11px; }
@@ -1098,7 +1099,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   <dialog class="welcome" id="welcome" aria-labelledby="h-welcome" aria-describedby="welcome-desc">
     <div class="welcome-art" aria-hidden="true"></div>
     <img class="welcome-mark" src="brand/soniq-icon.webp" alt="" width="256" height="256">
-    <div class="lang-pick" id="welcome-lang" role="group" aria-label="Language · שפה · اللغة · Язык"></div>
+    <div class="lang-pick"><label for="welcome-lang" id="welcome-lang-l"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/><path d="M3 12h18M12 3c2.6 2.8 2.6 15.2 0 18M12 3c-2.6 2.8-2.6 15.2 0 18" stroke="currentColor" stroke-width="2" fill="none"/></svg><span>שפה</span></label><select class="select lang-select" id="welcome-lang"></select></div>
     <p class="eyebrow">ברוכים הבאים ל-SONIQ</p>
     <h2 id="h-welcome" tabindex="-1" autofocus>מה אתם מנגנים?</h2>
     <p class="desc" id="welcome-desc">נכין את המפה, התרגול והאלתור לכלי שלכם. אפשר לשנות את זה בכל רגע בהגדרות.</p>
@@ -1168,6 +1169,17 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   const LANGS = { he: 'עברית', en: 'English', ar: 'العربية', ru: 'Русский', fr: 'Français', es: 'Español', de: 'Deutsch', it: 'Italiano' };
   if (!LANGS[SET.lang]) SET.lang = 'he';
   const RTL = SET.lang === 'he' || SET.lang === 'ar';
+  // the label always carries the word "Language" too, so someone who cannot read the current language still finds it
+  const LANG_LABEL = () => T('שפה') + (SET.lang === 'en' ? '' : ' · Language');
+  function langSelect(sel, onPick) {
+    sel.textContent = '';
+    Object.keys(LANGS).forEach(k => {
+      const o = document.createElement('option'); o.value = k; o.lang = k; o.dir = k === 'he' || k === 'ar' ? 'rtl' : 'ltr';
+      o.textContent = LANGS[k]; o.selected = k === SET.lang; sel.appendChild(o);
+    });
+    sel.addEventListener('change', () => { const k = sel.value; if (k === SET.lang) return; SET.lang = k; if (onPick) onPick(k); saveSettings(); try { location.reload(); } catch (e) { /* ignore */ } });
+    return sel;
+  }
   // one dictionary per language, keyed by the Hebrew source text. A missing Arabic or Russian line falls back to English
   const DICT = SET.lang === 'he' ? null : SET.lang === 'en' ? null : (window.SONIQ_DICT || {});
   // shared links (?to=map or ?to=jam): open the sender's map or jam settings, without the first-run tour
@@ -3844,7 +3856,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   }
   function setSeg(opts, val, on) { const g = h('div', { class: 'seg' }); seg(g, opts, val, on); return g; }
   setList.appendChild(h('h3', { class: 'set-head' }, T('תצוגה ונגינה')));
-  setRow(T('שפה'), 'Language · اللغة · Язык', setSeg(Object.keys(LANGS).map(k => [k, `<span lang="${k}" dir="${k === 'he' || k === 'ar' ? 'rtl' : 'ltr'}">${LANGS[k]}</span>`]), SET.lang, v => { SET.lang = v; saveSettings(); try { location.reload(); } catch (e) { /* ignore */ } }), 'lang');
+  setRow(T('שפה'), SET.lang === 'en' ? '' : 'Language', langSelect(h('select', { class: 'select lang-select', 'aria-label': LANG_LABEL() })), 'lang');
   const MAIN_OPTS = [['guitar', T('גיטרה')], ['bass', T('בס')], ['piano', T('פסנתר')]];
   function LEVEL_OPTS() {
     return [
@@ -3922,11 +3934,8 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
       bass: '<path d="M21.5 2.5l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 2l3 3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M8 12.5c-1.6-.9-3.6-.5-4.4 1-.5.9-1.6 1.2-1.6 2.5 0 2.4 2.8 5.6 5.4 5.6 1.4 0 1.6-1.2 2.6-1.7 1.5-.8 1.8-2.8.9-4.3" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M5.5 17.5l2-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
       piano: '<rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8 5v14M12 5v14M16 5v14" stroke="currentColor" stroke-width="2"/><path d="M6.5 5h3v8h-3zM14.5 5h3v8h-3z" fill="currentColor"/>'
     };
-    Object.keys(LANGS).forEach(k => {
-      const b = h('button', { type: 'button', lang: k, dir: k === 'he' || k === 'ar' ? 'rtl' : 'ltr', 'aria-pressed': String(k === SET.lang) }, LANGS[k]);
-      b.addEventListener('click', () => { if (k === SET.lang) return; SET.lang = k; SET.names = /^(fr|es|it)$/.test(k) ? 'solfege' : 'letters'; saveSettings(); try { location.reload(); } catch (e) { /* ignore */ } });
-      $('welcome-lang').appendChild(b);
-    });
+    $('welcome-lang-l').querySelector('span').textContent = LANG_LABEL();
+    langSelect($('welcome-lang'), k => { SET.names = /^(fr|es|it)$/.test(k) ? 'solfege' : 'letters'; });
     MAIN_OPTS.forEach(([v, label]) => {
       const b = h('button', { type: 'button', 'data-main': v }); b.innerHTML = INST_ART[v]; b.append(label);
       b.addEventListener('click', () => { SET.toured = false; SET.main = v; levelStep(() => setMain(v)); });
