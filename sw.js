@@ -2,13 +2,11 @@
    The app's own files are saved at install. Sound samples and fonts from other sites are saved
    the first time they load, so every sound you have played once also works offline.
    Pages: network first (so updates arrive), then the saved copy. */
-const VERSION = 'soniq-v13';
+const VERSION = 'soniq-v14';
 const SHELL = VERSION + '-shell', RUNTIME = 'soniq-runtime';
 const PRECACHE = [
  "./",
  "index.html",
- "lang/ar.js",
- "lang/ru.js",
  "manifest.webmanifest",
  "favicon.png",
  "icon-180.png",

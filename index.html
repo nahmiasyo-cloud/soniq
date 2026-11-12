@@ -743,10 +743,10 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
       // first run: follow the phone. Many Israelis keep the phone in English, so English counts only when Hebrew is not in the list
       var langs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'he']).map(function (x) { return String(x).slice(0, 2).toLowerCase(); });
       var first = langs[0];
-      l = first === 'ar' || first === 'ru' ? first : first === 'en' && langs.indexOf('he') < 0 && langs.indexOf('iw') < 0 ? 'en' : 'he';
+      l = /^(ar|ru|fr|es|de|it)$/.test(first) ? first : first === 'en' && langs.indexOf('he') < 0 && langs.indexOf('iw') < 0 ? 'en' : 'he';
       window.SONIQ_FIRST_LANG = l;
     }
-    if (l === 'ar' || l === 'ru') document.write('<script src="lang/' + l + '.js"><\/script>');
+    if (/^(ar|ru|fr|es|de|it)$/.test(l)) document.write('<script src="lang/' + l + '.js"><\/script>');
   })();
 </script>
 </head>
@@ -1164,8 +1164,8 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   /* ---------- settings ---------- */
   const SET = { lang: 'he', names: 'letters', lefty: false, a4: 440, kit: 'modern', rockGtr: 'amp', master: 70, mic: false, transp: 0, main: '', onboarded: false, toured: false, last: '' };
   try { Object.assign(SET, JSON.parse(localStorage.getItem('mapat-settings') || '{}')); } catch (e) { /* storage unavailable */ }
-  if (window.SONIQ_FIRST_LANG) SET.lang = window.SONIQ_FIRST_LANG;
-  const LANGS = { he: 'עברית', en: 'English', ar: 'العربية', ru: 'Русский' };
+  if (window.SONIQ_FIRST_LANG) { SET.lang = window.SONIQ_FIRST_LANG; if (/^(fr|es|it)$/.test(SET.lang)) SET.names = 'solfege'; }
+  const LANGS = { he: 'עברית', en: 'English', ar: 'العربية', ru: 'Русский', fr: 'Français', es: 'Español', de: 'Deutsch', it: 'Italiano' };
   if (!LANGS[SET.lang]) SET.lang = 'he';
   const RTL = SET.lang === 'he' || SET.lang === 'ar';
   // one dictionary per language, keyed by the Hebrew source text. A missing Arabic or Russian line falls back to English
@@ -2403,7 +2403,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
         const lo = Math.min(...pair), pl = placeIv(semis, lo), loName = NAME12[lo % 12], hiName = spell(loName, iv.deg[1]).name;
         qNeck.paint(c => c === pl.a ? { cls: 'r', text: loName, sr: loName + T(', צליל נמוך') } : c === pl.b ? { cls: 'ok', text: hiName, sr: hiName + T(', צליל גבוה') } : null);
         boardHost.hidden = false; reveal(pl.a, pl.b);
-        finish(ok, T`זו ${iv.he} (${en(iv.sym)}), ${semis} חצאי טונים.` + '<br>' + shapeText(pl.a, pl.b, /^(en|ru)$/.test(SET.lang) ? instHeOf(Q.inst).toLowerCase() : instHeOf(Q.inst)));
+        finish(ok, T`זו ${iv.he} (${en(iv.sym)}), ${semis} חצאי טונים.` + '<br>' + shapeText(pl.a, pl.b, /^(en|ru|fr|es|it)$/.test(SET.lang) ? instHeOf(Q.inst).toLowerCase() : instHeOf(Q.inst)));
       };
       hear();
     }
@@ -3924,7 +3924,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
     };
     Object.keys(LANGS).forEach(k => {
       const b = h('button', { type: 'button', lang: k, dir: k === 'he' || k === 'ar' ? 'rtl' : 'ltr', 'aria-pressed': String(k === SET.lang) }, LANGS[k]);
-      b.addEventListener('click', () => { if (k === SET.lang) return; SET.lang = k; saveSettings(); try { location.reload(); } catch (e) { /* ignore */ } });
+      b.addEventListener('click', () => { if (k === SET.lang) return; SET.lang = k; SET.names = /^(fr|es|it)$/.test(k) ? 'solfege' : 'letters'; saveSettings(); try { location.reload(); } catch (e) { /* ignore */ } });
       $('welcome-lang').appendChild(b);
     });
     MAIN_OPTS.forEach(([v, label]) => {
