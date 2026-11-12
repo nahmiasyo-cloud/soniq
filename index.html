@@ -220,6 +220,12 @@ img.ico { object-fit: contain; }
 .facts dt { font-size: var(--fs-s); }
 .facts dd { margin: 0; word-spacing: .35em; color: var(--text); font: 600 var(--fs-b)/1.4 var(--font-mono); }
 .facts .deg-root { color: var(--tonic); }
+.fboxes { display: flex; flex-wrap: wrap; gap: var(--s2); margin: 0; }
+.fbox { min-width: 44px; min-height: 52px; padding: var(--s1) var(--s2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border-radius: var(--r1); background: var(--surface); border: 1px solid var(--border); }
+.fbox b { font: 600 var(--fs-m)/1.1 var(--font-mono); color: var(--text); }
+.fbox span { font: 500 var(--fs-xs) var(--font-mono); color: var(--muted); }
+.fbox.root { border-color: var(--tonic); } .fbox.root b { color: var(--tonic); }
 .desc { margin: var(--s2) 0 0; max-width: 68ch; color: var(--muted); font-size: var(--fs-s); }
 
 /* buttons and chips */
@@ -623,6 +629,14 @@ details.more[open] > summary { margin-bottom: var(--s3); }
 .step.rest { color: var(--muted); }
 .step.now { background: var(--accent); color: var(--on-accent); }
 .step .rn { display: block; font-size: 11px; opacity: .8; }
+.steps.chart { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; overflow: visible; border: 1px solid var(--border); border-radius: var(--r3); }
+.steps.chart .step { position: relative; max-width: none; min-height: 60px; border-radius: 0; background: var(--surface); font-size: var(--fs-b);
+  border-inline-end: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.steps.chart .step:nth-child(4n) { border-inline-end: 0; }
+.steps.chart .step:nth-last-child(-n+4):nth-child(4n+1), .steps.chart .step:nth-last-child(-n+4):nth-child(4n+1) ~ .step { border-bottom: 0; }
+.steps.chart .step .bn { position: absolute; top: 3px; left: 6px; font: 500 10px var(--font-mono); color: var(--muted); }
+.steps.chart .step.now { background: var(--accent); color: var(--on-accent); } .steps.chart .step.now .bn { color: var(--on-accent); }
+.steps.chart .step:first-child { border-start-start-radius: var(--r3); } .steps.chart .step:nth-child(4) { border-start-end-radius: var(--r3); }
 .now-chord { margin: 0; font-weight: 600; font-size: var(--fs-s); }
 .yt form { display: flex; gap: var(--s2); }
 .yt input[type="search"] { flex: 1; min-width: 0; min-height: 44px; padding: 0 var(--s4); border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
@@ -1949,7 +1963,11 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
     $('r-title').innerHTML = en(symText, 'sym') + ' ' + heText;
     const formula = set.map((n, i) => i === 0 ? `<span class="deg-root">${degDisp(n.d)}</span>` : degDisp(n.d)).join(' ');
     const notes = set.map(n => disp(n.name)).join(' · ');
-    $('r-facts').innerHTML = T`<div><dt>נוסחה</dt><dd>${en(formula)}</dd></div><div><dt>תווים</dt><dd>${en(notes)}</dd></div>`;
+    $('r-facts').textContent = '';
+    const tiles = h('dd', { class: 'fboxes' }, ...set.map((n, i) => h('span', { class: 'fbox' + (i === 0 ? ' root' : ''), role: 'img', lang: 'en', dir: 'ltr',
+      'aria-label': T`${n.name}, דרגה ${degDisp(n.d)}${i === 0 ? T(', טוניקה') : ''}` }, h('b', { 'aria-hidden': 'true' }, disp(n.name)), h('span', { 'aria-hidden': 'true' }, degDisp(n.d)))));
+    $('r-facts').appendChild(h('div', null, h('dt', { class: 'sr-only' }, T('נוסחה') + ' · ' + T('תווים')), tiles));
+    void formula; void notes;
     $('r-desc').textContent = def.desc;
     $('play-chord').hidden = S.cat === 'scale';
     $('map-status').textContent = T`מוצג: ${symText} ${heText}. תווים: ${notes}.`;
@@ -3822,6 +3840,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   }
   function renderSteps() {
     const s = styleOf(), host = $('jam-steps'); host.textContent = ''; stepEls = [];
+    host.classList.toggle('chart', s.fam === 'west');
     $('h-groove').textContent = s.fam === 'west' ? T('המהלך') : T('המקצב');
     if (s.fam === 'west') {
       s.prog.forEach((p, i) => {
@@ -3829,6 +3848,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
         const el = p.abs ? h('div', { class: 'step', lang: 'en' }, p.chords.map(c => c.name).join(' '))
           : multi ? h('div', { class: 'step', lang: 'en' }, starts.map(st => chordAt(i, st).name).join(' '), h('span', { class: 'rn' }, p.map(c => roman(c[0], c[1])).join(' ')))
           : h('div', { class: 'step', lang: 'en' }, chordAt(i).name, h('span', { class: 'rn' }, roman(p[0], p[1])));
+        el.prepend(h('small', { class: 'bn', 'aria-hidden': 'true' }, String(i + 1)));
         host.appendChild(el); stepEls.push(el);
       });
       return;
