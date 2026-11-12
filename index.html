@@ -1527,12 +1527,34 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
     o.pend.set(k, p); return p;
   }
   // make sure the notes are decoded before a groove starts
+  // the electronic styles use their own synths instead of General MIDI samples: 'syn:sub' a round sub bass,
+  // 'syn:psy' the short filtered rolling bass of psytrance, 'syn:stab' a detuned saw chord stab, 'syn:pad' a slow warm pad
+  const isSyn = sf => typeof sf === 'string' && sf.startsWith('syn:');
+  function synVoice(kind, midi, t, vol, dur, dest) {
+    if (!AC || !dest) return;
+    const f = 440 * Math.pow(2, (midi - 69) / 12) * SET.a4 / 440, out = AC.createGain(), lp = AC.createBiquadFilter();
+    lp.type = 'lowpass'; lp.connect(out); out.connect(dest);
+    const osc = (type, fr, det, g) => { const o = AC.createOscillator(), a = AC.createGain(); o.type = type; o.frequency.value = fr; o.detune.value = det; a.gain.value = g; o.connect(a); a.connect(lp); o.start(t); o.stop(t + dur + 0.8); };
+    const env = (a, peak, rel) => { out.gain.setValueAtTime(0.0001, t); out.gain.linearRampToValueAtTime(peak, t + a); out.gain.setValueAtTime(peak, t + Math.max(a, dur)); out.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(a, dur) + rel); };
+    if (kind === 'sub') { osc('sine', f, 0, 1); osc('triangle', f * 2, 0, 0.18); lp.frequency.value = 700; env(0.006, 0.55 * vol, 0.08); }
+    else if (kind === 'psy') {
+      osc('sawtooth', f, 0, 0.6); osc('square', f, 6, 0.25); lp.Q.value = 7;
+      lp.frequency.setValueAtTime(1500, t); lp.frequency.exponentialRampToValueAtTime(180, t + 0.09); env(0.003, 0.5 * vol, 0.03);
+    } else if (kind === 'stab') {
+      [-9, 0, 9].forEach(d => osc('sawtooth', f, d, 0.33)); lp.Q.value = 2;
+      lp.frequency.setValueAtTime(3200, t); lp.frequency.exponentialRampToValueAtTime(700, t + 0.22); env(0.004, 0.32 * vol, 0.18);
+    } else if (kind === 'pad') {
+      [-12, 0, 12].forEach(d => osc('sawtooth', f, d, 0.22)); osc('triangle', f / 2, 0, 0.3); lp.frequency.value = 1300; env(Math.min(0.5, dur / 3), 0.22 * vol, 0.7);
+    }
+  }
   async function prepare(name, midis) {
+    if (isSyn(name)) return true;
     const ok = await loadSF(name); if (!ok) return false;
     const o = SF[name]; await Promise.all([...new Set(midis)].map(m => decodeKey(o, nearestKey(o, m)))); return true;
   }
   // play a sampled note at an exact time; returns false if it could not
   function sampleAt(name, midi, t, vol, dur, dest) {
+    if (isSyn(name)) { synVoice(name.slice(4), midi, t, vol, dur, dest); return true; }
     const o = SF[name]; if (!o || o.state !== 'ready') return false;
     const k = nearestKey(o, midi), b = o.bufs.get(k);
     if (!b) { decodeKey(o, k); return false; }
@@ -3037,7 +3059,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
         // with tom fills, staccato chord hits on the offbeats, Phrygian dominant I and bII, everything through the spring
         { id: 'dickdale', he: T("סרף מהיר"), bpm: 176, bass: 'eighths', prog: [['1', 'maj'], ['1', 'maj'], ['b2', 'maj'], ['b2', 'maj'], ['1', 'maj'], ['1', 'maj'], ['b2', 'maj'], ['1', 'maj']],
           kit: [['kick', [0, 8, 10], 0.85], ['snare', [4, 12], 0.8], ['ride', [0, 2, 4, 6, 8, 10, 12, 14], 0.26], ['tom', [13, 14, 15], 0.4], ['hatO', [0], 0.25]],
-          comp: { sf: 'electric_guitar_clean', lo: 40, spring: true, arp: true, order: [0], hits: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(x => [x, 0.09, x % 4 ? 0.12 : 0.22]) },
+          comp: { sf: 'electric_guitar_clean', lo: 50, spring: true, hits: [[0, 0.5, 0.24], [3, 0.15, 0.15], [6, 0.4, 0.2], [10, 0.15, 0.15], [12, 0.4, 0.2]] },
           comp2: { sf: 'electric_guitar_clean', lo: 57, spring: true, hits: [[6, 0.12, 0.2], [14, 0.12, 0.2]] },
           scales: [['hijaz', T("חיג'אז (פריגי דומיננטי)")], ['harm', T('מינור הרמוני')], ['phryg', T('פריגי')]] }
       ] },
@@ -3046,7 +3068,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
       prog: [['1', 'maj'], ['5', 'maj'], ['6', 'min'], ['4', 'maj']],
       kit: [['kick', [0, 7, 8], 0.85], ['snare', [4, 12], 0.7], ['hatC', [0, 2, 4, 6, 8, 10, 12, 14], 0.28], ['shaker', [1, 3, 5, 7, 9, 11, 13, 15], 0.1]],
       bass: 'popbass', bassSf: 'electric_bass_finger', comp: { sf: 'acoustic_grand_piano', lo: 55, hits: [[0, 1.6, 0.24], [6, 0.4, 0.16], [8, 1.6, 0.22]] },
-      comp2: { sf: 'electric_guitar_muted', lo: 64, arp: true, order: [0, 1, 2, 1], hits: [2, 6, 10, 14].map(x => [x, 0.12, 0.12]) },
+      comp2: { sf: 'electric_piano_1', lo: 60, rootless: true, hits: [[4, 0.5, 0.12], [12, 0.5, 0.12]] },
       scales: [['major', T("מז'ור")], ['pmaj', T("פנטטוני מז'ור")], ['pmin', T('פנטטוני מינור')]],
       variants: [
         { id: 'axis', he: T("ארבעה אקורדים") },
@@ -3087,19 +3109,19 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
     { id: 'house', fam: 'west', he: T("האוס"), origin: T("שיקגו"), meter: '4/4', steps: 16, spb: 4, bpm: 124,
       prog: [['1', 'm7'], ['1', 'm7'], ['4', 'm7'], ['4', 'm7']],
       kit: [['ekick', [0, 4, 8, 12], 1.0], ['clap', [4, 12], 0.5], ['ehatO', [2, 6, 10, 14], 0.4], ['ehat', [1, 3, 5, 7, 9, 11, 13, 15], 0.18], ['shaker', [0, 2, 4, 6, 8, 10, 12, 14], 0.08]],
-      bass: 'offbeat', bassSf: 'synth_bass_1', bassVol: 0.5, comp: { sf: 'acoustic_grand_piano', lo: 57, rootless: true, hits: [[2, 0.2, 0.22], [6, 0.2, 0.18], [10, 0.2, 0.22], [13, 0.2, 0.18]] },
+      bass: 'offbeat', bassSf: 'syn:sub', bassVol: 0.5, comp: { sf: 'acoustic_grand_piano', lo: 57, rootless: true, hits: [[2, 0.2, 0.22], [6, 0.2, 0.18], [10, 0.2, 0.22], [13, 0.2, 0.18]] },
       scales: [['dorian', T("דורי")], ['minor', T("מינור טבעי")], ['pmin', T("פנטטוני מינור")]],
       variants: [
         { id: 'house', he: T("האוס") },
         // deep house: slower, warm minor 9 chords held on the electric piano, softer hats
         { id: 'deep', he: T("דיפ האוס"), bpm: 120, prog: [['1', 'm9'], ['1', 'm9'], ['4', 'm9'], ['b7', 'maj9']],
           kit: [['ekick', [0, 4, 8, 12], 0.9], ['clap', [4, 12], 0.35], ['ehatO', [2, 6, 10, 14], 0.26], ['shaker', [1, 3, 5, 7, 9, 11, 13, 15], 0.1]],
-          comp: { sf: 'electric_piano_1', lo: 55, rootless: true, hits: [[0, 1.6, 0.18], [10, 1.2, 0.14]] }, pad: { sf: 'pad_2_warm', lo: 55 } }
+          comp: { sf: 'electric_piano_1', lo: 55, rootless: true, hits: [[0, 1.6, 0.18], [10, 1.2, 0.14]] }, pad: { sf: 'syn:pad', lo: 55 } }
       ] },
     { id: 'techno', fam: 'west', he: T("טכנו"), origin: T("דטרויט וברלין"), meter: '4/4', steps: 16, spb: 4, bpm: 130,
       prog: [['1', 'min'], ['1', 'min'], ['1', 'min'], ['1', 'min']],
       kit: [['ekick', [0, 4, 8, 12], 1.0], ['clap', [4, 12], 0.3], ['ehatO', [2, 6, 10, 14], 0.36], ['ehat', [0, 1, 3, 4, 5, 7, 8, 9, 11, 12, 13, 15], 0.14]],
-      bass: 'techno', bassSf: 'synth_bass_1', bassVol: 0.5, comp: { sf: 'pad_2_warm', lo: 60, rootless: true, hits: [[3, 0.15, 0.16], [11, 0.15, 0.13]], echo: { beats: 0.75, n: 3, fb: 0.4 } },
+      bass: 'techno', bassSf: 'syn:sub', bassVol: 0.5, comp: { sf: 'syn:stab', lo: 60, rootless: true, hits: [[3, 0.15, 0.16], [11, 0.15, 0.13]], echo: { beats: 0.75, n: 3, fb: 0.4 } },
       scales: [['minor', T("מינור טבעי")], ['phryg', T("פריגי")], ['dorian', T("דורי")]],
       variants: [
         { id: 'techno', he: T("טכנו") },
@@ -3109,11 +3131,11 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
       prog: [['1', 'min'], ['1', 'min'], ['1', 'min'], ['1', 'min']],
       // the rolling bass between the kicks, an open hat on every offbeat, a sixteenth arpeggio with echo
       kit: [['ekick', [0, 4, 8, 12], 1.0], ['ehatO', [2, 6, 10, 14], 0.38], ['ehat', [1, 3, 5, 7, 9, 11, 13, 15], 0.14], ['esnare', [12], 0.2]],
-      bass: 'psy', bassSf: 'synth_bass_1', bassVol: 0.5, comp: { sf: 'lead_2_sawtooth', lo: 60, arp: true, order: [0, 1, 2, 1], hits: [0, 3, 6, 8, 11, 14].map(x => [x, 0.12, 0.08]), echo: { beats: 0.75, n: 3, fb: 0.45 } },
+      bass: 'psy', bassSf: 'syn:psy', bassVol: 0.9, comp: { sf: 'syn:pad', lo: 55, hits: [[0, 3.8, 0.5]] },
       scales: [['phryg', T("פריגי")], ['hijaz', T("חיג'אז (פריגי דומיננטי)")], ['minor', T("מינור טבעי")], ['harm', T("מינור הרמוני")]],
       variants: [
         { id: 'fullon', he: T("פול און") },
-        { id: 'prog', he: T("פרוגרסיב"), bpm: 136, kit: [['ekick', [0, 4, 8, 12], 0.95], ['ehatO', [2, 6, 10, 14], 0.3], ['shaker', [1, 3, 5, 7, 9, 11, 13, 15], 0.1], ['clap', [4, 12], 0.25]], pad: { sf: 'pad_2_warm', lo: 55 } }
+        { id: 'prog', he: T("פרוגרסיב"), bpm: 136, kit: [['ekick', [0, 4, 8, 12], 0.95], ['ehatO', [2, 6, 10, 14], 0.3], ['shaker', [1, 3, 5, 7, 9, 11, 13, 15], 0.1], ['clap', [4, 12], 0.25]], comp: { sf: 'syn:stab', lo: 60, rootless: true, hits: [[3, 0.15, 0.2], [11, 0.15, 0.16]], echo: { beats: 0.75, n: 3, fb: 0.4 } } }
       ] },
     { id: 'rave', fam: 'west', he: T("רייב"), origin: T("בריטניה, שנות ה-90"), meter: '4/4', steps: 16, spb: 4, bpm: 140,
       prog: [['1', 'min'], ['1', 'min'], ['b6', 'maj'], ['b7', 'maj']],
@@ -3125,7 +3147,8 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
         { id: 'rave', he: T("רייב שנות ה-90") },
         // drum and bass: double speed, the two-step break, a long low bass under it
         { id: 'dnb', he: T("דראם אנד בייס"), bpm: 174, comp: { sf: 'electric_piano_1', lo: 57, rootless: true, hits: [[0, 1.8, 0.14]] },
-          kit: [['ekick', [0, 10], 1.0], ['esnare', [4, 12], 0.8], ['esnare', [7, 14], 0.16], ['ehat', [0, 2, 4, 6, 8, 10, 12, 14], 0.24], ['ehat', [3, 11], 0.12]] }
+          // the break on the sampled kit: two bars, a bright crack on 2 and 4 with ghost notes around it
+          kit: [['kick', [0, 2, 10, 11, 16, 18, 26], 0.85], ['snare', [4, 12, 20, 28], 0.9], ['snare', [7, 9, 15, 23, 25, 30], 0.3], ['hatC', [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30], 0.32], ['ride', [0, 8, 16, 24], 0.14]] }
       ] },
     { id: 'funk', fam: 'west', he: T('פאנק'), origin: T('שש-עשריות'), meter: '4/4', steps: 16, spb: 4, bpm: 98, swing: 0.06,
       prog: [['1', 'm7'], ['1', 'm7'], ['4', 'dom7'], ['4', 'dom7']],
@@ -3139,7 +3162,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
         { id: 'linear', he: T('לינארי'), bpm: 90, swing: 0.1, bass: 'cissy',
           prog: [['1', 'dom7'], ['1', 'dom7'], ['1', 'dom7'], ['1', 'dom7'], ['4', 'dom7'], ['4', 'dom7'], ['1', 'dom7'], ['1', 'dom7']],
           kit: [['kick', [0, 3, 10], 0.9], ['snare', [4, 12], 0.75], ['snare', [7, 9, 15], 0.14], ['hatC', [2, 6, 8, 11, 14], 0.36], ['hatO', [13], 0.26]],
-          comp: { sf: 'electric_guitar_muted', lo: 48, arp: true, order: [0], hits: [[0, 0.1, 0.3], [3, 0.08, 0.2], [6, 0.1, 0.22], [7, 0.08, 0.22], [10, 0.1, 0.24]] },
+          comp: { sf: 'clavinet', lo: 55, rootless: true, hits: [[2, 0.12, 0.26], [6, 0.12, 0.22], [10, 0.12, 0.26], [14, 0.1, 0.2]] },
           comp2: { sf: 'drawbar_organ', lo: 60, rootless: true, hits: [[4, 0.12, 0.2], [12, 0.12, 0.2]] },
           scales: [['mixo', T("מיקסולידי")], ['pmin', T("פנטטוני מינור")], ['blues', T("בלוז")], ['dorian', T("דורי")]] },
         // after Cold Sweat: a two-bar drum part with the backbeat pushed to the "and" of 4 in bar one and a late kick in bar two
@@ -3194,7 +3217,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
           kit: [['kick', [0, 4, 8, 12], 0.9], ['cross', [8], 0.65], ['hatO', [2, 6, 10, 14], 0.32], ['hatC', [0, 4, 8, 12], 0.18], ['snare', [14, 15], 0.12]] },
         // dancehall: the digital riddim era of the mid-80s, a drum machine and a synth bass locked to the kick,
         // a minor two-chord vamp and keys stabbing the offbeats; straight, no swing
-        { id: 'dancehall', he: T("דאנסהול"), bpm: 96, swing: 0, bass: 'dancehall', bassSf: 'synth_bass_1', bassVol: 0.5,
+        { id: 'dancehall', he: T("דאנסהול"), bpm: 96, swing: 0, bass: 'dancehall', bassSf: 'syn:sub', bassVol: 0.5,
           prog: [['1', 'min'], ['1', 'min'], ['b7', 'maj'], ['b7', 'maj']],
           kit: [['ekick', [0, 6, 10], 0.9], ['esnare', [4, 12], 0.6], ['clap', [12], 0.35], ['ehat', [0, 2, 4, 6, 8, 10, 12, 14], 0.3], ['shaker', [1, 3, 5, 7, 9, 11, 13, 15], 0.1]],
           comp: { sf: 'electric_piano_1', lo: 60, rootless: true, hits: [[2, 0.15, 0.2], [10, 0.15, 0.2]] }, comp2: null,
@@ -3248,14 +3271,14 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
           prog: [['1', 'maj'], ['1', 'maj'], ['4', 'maj'], ['1', 'maj'], ['5', 'maj'], ['4', 'maj'], ['1', 'maj'], ['5', 'maj']],
           kit: [['kick', [0, 8], 0.85], ['snare', [4, 12], 0.75], ['snare', [0, 2, 6, 8, 10, 14], 0.26], ['snare', [1, 3, 5, 7, 9, 11, 13, 15], 0.13], ['hatC', [4, 12], 0.3]],
           comp: { sf: 'electric_guitar_clean', lo: 55, hits: [[2, 0.12, 0.3], [6, 0.12, 0.26], [10, 0.12, 0.3], [14, 0.12, 0.26]] },
-          comp2: { sf: 'electric_guitar_muted', lo: 60, arp: true, order: [0, 2, 1, 2], hits: [[0, 0.1, 0.2], [3, 0.1, 0.16], [8, 0.1, 0.2], [11, 0.1, 0.16]] },
+          comp2: null,
           scales: [['majblues', T("בלוז מז'ורי")], ['pmaj', T("פנטטוני מז'ור")], ['mixo', T("מיקסולידי")]] },
         // rockabilly after Eddie Cochran's Twenty Flight Rock: fast and swung, a slapped upright walking the boogie
         // (1 3 5 6, then down), the snare cracking on 2 and 4 and the guitar chugging the chord with the sixth
         { id: 'mystery', he: T("רוקבילי"), bpm: 168, swing: 0.14, bass: 'boogie', bassSf: 'acoustic_bass',
           prog: [['1', 'maj'], ['1', 'maj'], ['1', 'maj'], ['1', 'maj'], ['4', 'maj'], ['4', 'maj'], ['1', 'maj'], ['1', 'maj'], ['5', 'maj'], ['4', 'maj'], ['1', 'maj'], ['5', 'maj']],
           kit: [['kick', [0, 8], 0.7], ['snare', [4, 12], 0.7], ['cross', [4, 12], 0.3], ['snare', [2, 6, 10, 14], 0.1]],
-          comp: { sf: 'electric_guitar_clean', lo: 45, arp: true, order: [0, 1], hits: [[0, 0.25, 0.14], [2, 0.2, 0.1], [4, 0.25, 0.14], [6, 0.2, 0.1], [8, 0.25, 0.14], [10, 0.2, 0.1], [12, 0.25, 0.14], [14, 0.2, 0.1]] },
+          comp: { sf: 'electric_guitar_clean', lo: 50, hits: [[0, 0.2, 0.14], [4, 0.2, 0.14], [8, 0.2, 0.14], [12, 0.2, 0.14]] },
           comp2: { sf: 'electric_guitar_clean', lo: 57, hits: [[4, 0.12, 0.1], [12, 0.12, 0.1]] },
           scales: [['majblues', T("בלוז מז'ורי")], ['pmaj', T("פנטטוני מז'ור")], ['mixo', T("מיקסולידי")], ['blues', T("בלוז")]] },
         { id: 'twostep', he: T('טו-סטפ'), bpm: 110, kit: [['kick', [0, 8], 0.8], ['snare', [4, 12], 0.6], ['hatC', [0, 2, 4, 6, 8, 10, 12, 14], 0.35]] },
@@ -3365,7 +3388,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
       // a muted guitar ostinato against a chord guitar, and a bass riff that repeats
       kit: [['kick', [0, 1, 8, 9], 0.85], ['snare', [3, 5, 6, 13, 14], 0.42], ['hatC', [0, 3, 4, 7, 8, 11, 12, 15], 0.18], ['hatC', [2, 6, 10, 14], 0.3],
         ['shaker', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 0.12], ['clave', [2, 6, 10, 14], 0.3], ['congaO', [6, 7, 14], 0.4], ['congaS', [4, 12], 0.35]],
-      bass: 'afrobeat', bassSf: 'electric_bass_finger', comp: { sf: 'electric_guitar_muted', lo: 60, arp: true, order: [0, 2, 1, 3, 0, 2, 3, 1], hits: [[0, 0.1, 0.3], [2, 0.1, 0.24], [3, 0.1, 0.24], [6, 0.1, 0.28], [8, 0.1, 0.3], [10, 0.1, 0.24], [11, 0.1, 0.24], [14, 0.1, 0.28]] },
+      bass: 'afrobeat', bassSf: 'electric_bass_finger', comp: { sf: 'drawbar_organ', lo: 55, rootless: true, hits: [[0, 0.3, 0.14], [6, 0.2, 0.12], [8, 0.3, 0.14], [14, 0.2, 0.12]] },
       comp2: { sf: 'electric_guitar_clean', lo: 62, rootless: true, hits: [[3, 0.08, 0.22], [7, 0.08, 0.2], [11, 0.08, 0.22], [15, 0.08, 0.2]] },
       scales: [['dorian', T("דורי")], ['pmin', T("פנטטוני מינור")], ['minor', T("מינור טבעי")], ['blues', T("בלוז")]],
       variants: [
@@ -3374,7 +3397,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
         { id: 'zombie', he: T("אפרוביט מהיר"), bpm: 132, prog: [['1', 'm7'], ['1', 'm7'], ['1', 'm7'], ['1', 'm7']],
           kit: [['kick', [0, 6, 8, 14], 0.9], ['snare', [4, 12], 0.6], ['snare', [2, 3, 10, 11], 0.14], ['hatC', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 0.2], ['hatO', [6, 14], 0.3],
             ['clave', [0, 3, 6, 10, 12], 0.4], ['shaker', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 0.12], ['congaO', [7, 15], 0.4], ['congaS', [4, 12], 0.3]],
-          comp: { sf: 'electric_guitar_muted', lo: 62, arp: true, order: [0, 1, 0, 2, 0, 1, 3, 2], hits: [[0, 0.1, 0.3], [2, 0.1, 0.26], [3, 0.1, 0.22], [5, 0.1, 0.26], [8, 0.1, 0.3], [10, 0.1, 0.26], [11, 0.1, 0.22], [13, 0.1, 0.26]] },
+          comp: { sf: 'brass_section', lo: 55, rootless: true, hits: [[0, 0.25, 0.22], [3, 0.12, 0.16], [8, 0.25, 0.2], [11, 0.12, 0.16]] },
           scales: [['dorian', T("דורי")], ['pmin', T("פנטטוני מינור")], ['minor', T("מינור טבעי")]] }
       ] },
     { id: 'ethiojazz', fam: 'west', he: T("אתיו-ג'אז"), origin: T("אתיופיה, מולאטו אסטאטקה"), meter: '12/8', steps: 12, spb: 3, bpm: 60,
