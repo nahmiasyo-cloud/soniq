@@ -3711,11 +3711,19 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
     }
     J.queue.push({ t, step: J.step, bar: J.bar });
   }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    if (J.playing) { clearTimeout(J.timer); tick(); }
+    if (typeof M !== 'undefined' && M.playing) { clearTimeout(M.timer); mTick(); }
+  });
   function tick() {
     if (!J.playing) return;
-    const s = styleOf(), horizon = AC.currentTime + 0.15;
+    // with the screen locked or another app in front the browser wakes us about once a second, so plan further ahead;
+    // and after a longer sleep skip the missed steps instead of firing them all at once
+    const s = styleOf(), horizon = AC.currentTime + (document.hidden ? 1.6 : 0.15);
     tickDrone(horizon + 0.5);
     if (s.steps) {
+      while (J.next < AC.currentTime - 0.03) { J.next += stepTime(s); J.step++; if (J.step >= s.steps) { J.step = 0; J.bar++; } }
       while (J.next < horizon) {
         const dur = stepTime(s);
         const swing = s.swing && J.step % 2 ? s.swing * dur * 2 : 0;
@@ -4693,7 +4701,14 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   }
   function mTick() {
     if (!M.playing) return;
-    const groups = mGroups(), horizon = AC.currentTime + 0.12;
+    const groups = mGroups(), horizon = AC.currentTime + (document.hidden ? 1.6 : 0.12);
+    const advance = () => {
+      const subCount = eighthMeter() ? groups[M.beat] : M.sub;
+      M.next += eighthMeter() ? 60 / M.bpm : 60 / M.bpm / M.sub; M.subIdx++;
+      if (M.subIdx >= subCount) { M.subIdx = 0; M.beat = (M.beat + 1) % groups.length; }
+    };
+    // after the page slept, step past the missed clicks silently so the count stays in place
+    while (M.next < AC.currentTime - 0.03) advance();
     while (M.next < horizon) {
       // in x/8 meters a "beat" is a group of eighths; the bpm counts eighth notes there
       const subCount = eighthMeter() ? groups[M.beat] : M.sub;
