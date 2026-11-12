@@ -30,7 +30,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;600&family=IBM+Plex+Sans+Hebrew:wght@400;600&family=IBM+Plex+Mono:wght@600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;600&family=IBM+Plex+Sans+Hebrew:wght@400;600&family=IBM+Plex+Sans+Arabic:wght@400;600&family=IBM+Plex+Mono:wght@600&display=swap">
 <style>
 /* Layout: app shell after Spotify's UX. Sidebar nav (start side), one content panel, a persistent player bar.
    Single deliberate dark theme: near-black ground, violet accent for actions only. */
@@ -69,8 +69,8 @@
   --bad: #FF968D;
   --open-str: #6E5A86;
   /* type */
-  --font-display: "Outfit", "IBM Plex Sans Hebrew", system-ui, sans-serif;
-  --font-body: "Inter", "IBM Plex Sans Hebrew", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Outfit", "Inter", "IBM Plex Sans Hebrew", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-body: "Inter", "IBM Plex Sans Hebrew", "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --fs-xl: 40px; --fs-l: 28px; --fs-m: 20px; --fs-b: 16px; --fs-s: 14px; --fs-xs: 12px;
   /* space, radius, motion */
@@ -710,6 +710,10 @@ body[data-level="beginner"] .rn { display: none; }
 .lib-all { display: block; margin: var(--s4) auto 0; }
 .welcome-opts small { display: block; font-weight: 400; font-size: var(--fs-s); color: var(--muted); line-height: 1.35; }
 .welcome-opts.levels button { min-height: 0; padding: var(--s4) var(--s3); }
+.lang-pick { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s2); margin-bottom: var(--s3); }
+.lang-pick button { min-height: 44px; padding: 0 var(--s3); border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--muted); font: inherit; font-size: var(--fs-s); cursor: pointer; }
+.lang-pick button[aria-pressed="true"] { color: var(--text); border-color: var(--accent); background: var(--surface-2); }
+.lang-pick button:hover, .lang-pick button:focus-visible { color: var(--text); border-color: var(--accent); }
 /* free and Pro: a small lock on what needs Pro */
 .pro-lock { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); color: var(--accent-soft); flex: none; vertical-align: -4px; }
 .pro-lock svg { width: 11px; height: 11px; }
@@ -731,6 +735,20 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
 .tuner-more { margin-top: var(--s3); }
 .tuner-more .toolbar { margin-top: var(--s3); }
 </style>
+<script>
+  (function () {
+    var l = '';
+    try { l = (JSON.parse(localStorage.getItem('mapat-settings') || '{}').lang) || ''; } catch (e) { /* no storage */ }
+    if (!l) {
+      // first run: follow the phone. Many Israelis keep the phone in English, so English counts only when Hebrew is not in the list
+      var langs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'he']).map(function (x) { return String(x).slice(0, 2).toLowerCase(); });
+      var first = langs[0];
+      l = first === 'ar' || first === 'ru' ? first : first === 'en' && langs.indexOf('he') < 0 && langs.indexOf('iw') < 0 ? 'en' : 'he';
+      window.SONIQ_FIRST_LANG = l;
+    }
+    if (l === 'ar' || l === 'ru') document.write('<script src="lang/' + l + '.js"><\/script>');
+  })();
+</script>
 </head>
 <body>
 
@@ -1080,6 +1098,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   <dialog class="welcome" id="welcome" aria-labelledby="h-welcome" aria-describedby="welcome-desc">
     <div class="welcome-art" aria-hidden="true"></div>
     <img class="welcome-mark" src="brand/soniq-icon.webp" alt="" width="256" height="256">
+    <div class="lang-pick" id="welcome-lang" role="group" aria-label="Language · שפה · اللغة · Язык"></div>
     <p class="eyebrow">ברוכים הבאים ל-SONIQ</p>
     <h2 id="h-welcome" tabindex="-1" autofocus>מה אתם מנגנים?</h2>
     <p class="desc" id="welcome-desc">נכין את המפה, התרגול והאלתור לכלי שלכם. אפשר לשנות את זה בכל רגע בהגדרות.</p>
@@ -1145,6 +1164,12 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   /* ---------- settings ---------- */
   const SET = { lang: 'he', names: 'letters', lefty: false, a4: 440, kit: 'modern', rockGtr: 'amp', master: 70, mic: false, transp: 0, main: '', onboarded: false, toured: false, last: '' };
   try { Object.assign(SET, JSON.parse(localStorage.getItem('mapat-settings') || '{}')); } catch (e) { /* storage unavailable */ }
+  if (window.SONIQ_FIRST_LANG) SET.lang = window.SONIQ_FIRST_LANG;
+  const LANGS = { he: 'עברית', en: 'English', ar: 'العربية', ru: 'Русский' };
+  if (!LANGS[SET.lang]) SET.lang = 'he';
+  const RTL = SET.lang === 'he' || SET.lang === 'ar';
+  // one dictionary per language, keyed by the Hebrew source text. A missing Arabic or Russian line falls back to English
+  const DICT = SET.lang === 'he' ? null : SET.lang === 'en' ? null : (window.SONIQ_DICT || {});
   // shared links (?to=map or ?to=jam): open the sender's map or jam settings, without the first-run tour
   const SHARED = (() => { try { return new URLSearchParams(location.search); } catch (e) { return new URLSearchParams(''); } })();
   const SHARED_TO = ['map', 'jam'].includes(SHARED.get('to')) ? SHARED.get('to') : '';
@@ -1168,28 +1193,37 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   function T(a, ...vals) {
     if (Array.isArray(a) && a.raw) {
       const key = a.reduce((k, part, i) => k + (i ? '{' + (i - 1) + '}' : '') + part, '');
-      const tr = SET.lang === 'en' && EN[key];
+      const tr = tl(key);
       if (tr) return tr.replace(/\{(\d+)\}/g, (_, n) => vals[n]);
       return a.reduce((r, part, i) => r + part + (i < vals.length ? vals[i] : ''), '');
     }
-    return SET.lang === 'en' && EN[a] != null ? EN[a] : a;
+    const t = tl(a); return t != null ? t : a;
+  }
+  // translation of one source string, or null in Hebrew
+  function tl(k) {
+    if (SET.lang === 'he') return null;
+    if (DICT && DICT[k] != null) return DICT[k];
+    return EN[k] != null ? EN[k] : null;
   }
   function translateStatic(root) {
     const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), nodes = [];
     while (w.nextNode()) nodes.push(w.currentNode);
     nodes.forEach(n => {
       const raw = n.nodeValue, t = raw.replace(/\s+/g, ' ').trim();
-      if (t && EN[t] != null) n.nodeValue = raw.match(/^\s*/)[0] + EN[t] + raw.match(/\s*$/)[0];
+      const x = t && tl(t); if (x != null && x !== false) n.nodeValue = raw.match(/^\s*/)[0] + x + raw.match(/\s*$/)[0];
     });
     root.querySelectorAll('[aria-label],[placeholder],[title],[label]').forEach(el => ['aria-label', 'placeholder', 'title', 'label'].forEach(at => {
-      const v = el.getAttribute(at); if (v && EN[v] != null) el.setAttribute(at, EN[v]);
+      const v = el.getAttribute(at), x = v && tl(v); if (x != null && x !== false) el.setAttribute(at, x);
     }));
   }
   (function applyLanguage() {
-    const appEl = document.querySelector('.app'), enMode = SET.lang === 'en';
-    document.documentElement.lang = enMode ? 'en' : 'he'; document.documentElement.dir = enMode ? 'ltr' : 'rtl';
-    appEl.setAttribute('lang', enMode ? 'en' : 'he'); appEl.setAttribute('dir', enMode ? 'ltr' : 'rtl');
-    if (enMode) { document.title = 'SONIQ – Theory you can see on your instrument and hear with your ear'; translateStatic(appEl); }
+    const appEl = document.querySelector('.app'), dir = RTL ? 'rtl' : 'ltr';
+    document.documentElement.lang = SET.lang; document.documentElement.dir = dir;
+    appEl.setAttribute('lang', SET.lang); appEl.setAttribute('dir', dir);
+    if (SET.lang !== 'he') {
+      document.title = 'SONIQ – ' + T('תיאוריה שרואים על הכלי ושומעים באוזן.').replace(/\.$/, '');
+      translateStatic(appEl); document.querySelectorAll('dialog').forEach(d => { if (!appEl.contains(d)) translateStatic(d); });
+    }
   })();
   function saveSettings() { try { localStorage.setItem('mapat-settings', JSON.stringify(SET)); } catch (e) { /* ignore */ } }
   const SOLF = { he: { C: T('דו'), D: T('רה'), E: T('מי'), F: T('פה'), G: T('סול'), A: T('לה'), B: T('סי') }, en: { C: 'Do', D: 'Re', E: 'Mi', F: 'Fa', G: 'Sol', A: 'La', B: 'Si' } };
@@ -2369,7 +2403,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
         const lo = Math.min(...pair), pl = placeIv(semis, lo), loName = NAME12[lo % 12], hiName = spell(loName, iv.deg[1]).name;
         qNeck.paint(c => c === pl.a ? { cls: 'r', text: loName, sr: loName + T(', צליל נמוך') } : c === pl.b ? { cls: 'ok', text: hiName, sr: hiName + T(', צליל גבוה') } : null);
         boardHost.hidden = false; reveal(pl.a, pl.b);
-        finish(ok, T`זו ${iv.he} (${en(iv.sym)}), ${semis} חצאי טונים.` + '<br>' + shapeText(pl.a, pl.b, SET.lang === 'en' ? instHeOf(Q.inst).toLowerCase() : instHeOf(Q.inst)));
+        finish(ok, T`זו ${iv.he} (${en(iv.sym)}), ${semis} חצאי טונים.` + '<br>' + shapeText(pl.a, pl.b, /^(en|ru)$/.test(SET.lang) ? instHeOf(Q.inst).toLowerCase() : instHeOf(Q.inst)));
       };
       hear();
     }
@@ -3396,11 +3430,11 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
       });
       return;
     }
-    if (!s.tokens) { host.appendChild(h('p', { class: 'meta', lang: 'he', dir: 'rtl' }, T('רק דרון. בחרו מקצב כדי להוסיף כלי הקשה.'))); return; }
+    if (!s.tokens) { host.appendChild(h('p', { class: 'meta', lang: SET.lang, dir: RTL ? 'rtl' : 'ltr' }, T('רק דרון. בחרו מקצב כדי להוסיף כלי הקשה.'))); return; }
     const starts = new Set(); let acc = 0; s.groups.forEach(g => { starts.add(acc); acc += g; });
     s.tokens.forEach((tok, i) => {
       const native = tok.length > 1, label = native ? tok : SYL[tok] || tok;
-      const el = h('div', { class: 'step' + (starts.has(i) ? ' beat' : '') + (tok === '.' ? ' rest' : ''), lang: native ? 'en' : 'he' }, label);
+      const el = h('div', { class: 'step' + (starts.has(i) ? ' beat' : '') + (tok === '.' ? ' rest' : ''), lang: native ? 'en' : SET.lang }, label);
       host.appendChild(el); stepEls.push(el);
     });
   }
@@ -3810,7 +3844,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   }
   function setSeg(opts, val, on) { const g = h('div', { class: 'seg' }); seg(g, opts, val, on); return g; }
   setList.appendChild(h('h3', { class: 'set-head' }, T('תצוגה ונגינה')));
-  setRow(T('שפה'), 'Language', setSeg([['he', T('עברית')], ['en', 'English']], SET.lang, v => { SET.lang = v; saveSettings(); try { location.reload(); } catch (e) { /* ignore */ } }), 'lang');
+  setRow(T('שפה'), 'Language · اللغة · Язык', setSeg(Object.keys(LANGS).map(k => [k, `<span lang="${k}" dir="${k === 'he' || k === 'ar' ? 'rtl' : 'ltr'}">${LANGS[k]}</span>`]), SET.lang, v => { SET.lang = v; saveSettings(); try { location.reload(); } catch (e) { /* ignore */ } }), 'lang');
   const MAIN_OPTS = [['guitar', T('גיטרה')], ['bass', T('בס')], ['piano', T('פסנתר')]];
   function LEVEL_OPTS() {
     return [
@@ -3888,6 +3922,11 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
       bass: '<path d="M21.5 2.5l-12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 2l3 3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M8 12.5c-1.6-.9-3.6-.5-4.4 1-.5.9-1.6 1.2-1.6 2.5 0 2.4 2.8 5.6 5.4 5.6 1.4 0 1.6-1.2 2.6-1.7 1.5-.8 1.8-2.8.9-4.3" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M5.5 17.5l2-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
       piano: '<rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8 5v14M12 5v14M16 5v14" stroke="currentColor" stroke-width="2"/><path d="M6.5 5h3v8h-3zM14.5 5h3v8h-3z" fill="currentColor"/>'
     };
+    Object.keys(LANGS).forEach(k => {
+      const b = h('button', { type: 'button', lang: k, dir: k === 'he' || k === 'ar' ? 'rtl' : 'ltr', 'aria-pressed': String(k === SET.lang) }, LANGS[k]);
+      b.addEventListener('click', () => { if (k === SET.lang) return; SET.lang = k; saveSettings(); try { location.reload(); } catch (e) { /* ignore */ } });
+      $('welcome-lang').appendChild(b);
+    });
     MAIN_OPTS.forEach(([v, label]) => {
       const b = h('button', { type: 'button', 'data-main': v }); b.innerHTML = INST_ART[v]; b.append(label);
       b.addEventListener('click', () => { SET.toured = false; SET.main = v; levelStep(() => setMain(v)); });
@@ -3953,7 +3992,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   tour.addEventListener('cancel', e => { e.preventDefault(); tourEnd(); });
   tour.addEventListener('keydown', e => {
     if (e.target.closest('button')) return;
-    const fwd = SET.lang === 'en' ? 'ArrowRight' : 'ArrowLeft', back = SET.lang === 'en' ? 'ArrowLeft' : 'ArrowRight';
+    const fwd = !RTL ? 'ArrowRight' : 'ArrowLeft', back = !RTL ? 'ArrowLeft' : 'ArrowRight';
     if (e.key === fwd) $('tour-next').click(); else if (e.key === back && tourAt > 0) $('tour-prev').click();
   });
   $('pro-close').addEventListener('click', () => $('pro').close());
