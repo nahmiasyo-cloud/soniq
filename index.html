@@ -497,6 +497,7 @@ details.more[open] > summary { margin-bottom: var(--s3); }
 .beat-dot.first { box-shadow: inset 0 0 0 2px var(--muted); }
 .beat-dot.now { background: var(--accent); color: var(--on-accent); }
 .beat-dot.first.now { background: var(--tonic); color: var(--on-tonic); }
+.tools-tabs { margin-bottom: var(--s4); }
 .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: var(--s4); align-items: start; }
 .settings-list { display: grid; gap: 0; background: var(--surface-2); border-radius: var(--r2); }
 .set-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s4); padding: var(--s3) var(--s4); border-bottom: 1px solid var(--border); }
@@ -732,7 +733,7 @@ input[type="range"] { width: 100%; min-height: 28px; accent-color: var(--accent)
 /* content levels: what a beginner does not need yet stays out of sight */
 body[data-level="beginner"] .rn { display: none; }
 /* beginners start with the essentials: the drone, the step grid and the subdivision wait for the next level */
-body[data-level="beginner"] #jam-more, body[data-level="beginner"] section.row:has(#h-groove), body[data-level="beginner"] #metro-sub-field { display: none; }
+body[data-level="beginner"] #jam-more, body[data-level="beginner"] section.row:has(#h-groove) { display: none; }
 .seg > .cap-more, .chips > .cap-more { border-style: dashed; }
 .adv-set > summary { padding: var(--s4); cursor: pointer; font-weight: 600; }
 .lib-all { display: block; margin: var(--s4) auto 0; }
@@ -962,6 +963,7 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
             <h2 class="view-title" id="h-tools">טיונר ומטרונום</h2>
           </div>
         </div>
+        <div class="seg tools-tabs" id="tools-tabs" role="group" aria-labelledby="h-tools"></div>
         <div class="tools-grid">
         <div id="tool-tuner">
           <section class="card" aria-labelledby="h-tuner">
@@ -1318,10 +1320,10 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   };
   /* within a choice row, how many options a level sees at first; the rest sit behind "show all".
      The option in use always stays visible. Professional sees everything. */
-  const CAP = { beginner: { variant: 1, scale: 1, meter: 3 }, intermediate: { variant: 3, scale: 4 } };
+  const CAP = { beginner: { variant: 1, scale: 1 }, intermediate: { variant: 3, scale: 4 }, all: { meter: 1, sub: 1 } };
   const capOpen = {};
   function capChoices(host, key, prefer) {
-    const c = CAP[level()], n = c && c[key];
+    const c = CAP[level()], n = c && c[key] != null ? c[key] : CAP.all[key];
     if (n == null || capOpen[key]) return;
     const btns = [...host.children].filter(b => b.tagName === 'BUTTON');
     if (btns.length <= n + 1) return;
@@ -4880,8 +4882,12 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
     if (M.taps.length >= 2) { const gaps = M.taps.slice(1).map((t, i) => t - M.taps[i]); setBpm(60000 / (gaps.reduce((a, b) => a + b, 0) / gaps.length)); }
   });
   seg($('metro-meter'), METERS.map(([m]) => [m, `<span lang="en" dir="ltr">${m}</span>`]), M.meter, v => { M.meter = v; M.beat = 0; M.subIdx = 0; renderBeats(); });
-  capChoices($('metro-meter'), 'meter', ['3/4', '4/4', '6/8']);
+  capChoices($('metro-meter'), 'meter', ['4/4']);
   seg($('metro-sub'), SUBS.map(([v, l]) => [+v, l]), 1, v => { M.sub = v; M.subIdx = 0; });
+  capChoices($('metro-sub'), 'sub', ['1']);
+  // one tool at a time: the tuner opens first, the metronome is one tap away
+  seg($('tools-tabs'), [['tuner', T('טיונר')], ['metro', T('מטרונום')]], 'tuner', v => { $('tool-tuner').hidden = v !== 'tuner'; $('tool-metro').hidden = v !== 'metro'; });
+  $('tool-metro').hidden = true;
   renderBeats(); setBpm(M.bpm);
   // brand splash: fades once the fonts are in (or after a short moment); it never blocks clicks
   const ready = () => document.body.classList.add('ready');
