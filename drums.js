@@ -227,6 +227,14 @@
     // Space clicks a button when the key comes up: stop that, the drum already played when it went down
     stage.addEventListener('keyup', e => { if (e.target.closest('.dk-pad') && isPress(e)) { e.preventDefault(); mark(); } });
     stage.addEventListener('contextmenu', e => e.preventDefault());
+    // iPhone zooms on fast repeated taps even with touch-action: stop the browser's own touch handling on the kit.
+    // Pointer events still arrive, so playing is unaffected; pinch zoom stays available on the rest of the page.
+    const noZoom = e => { if (e.cancelable) e.preventDefault(); };
+    stage.addEventListener('touchstart', noZoom, { passive: false });
+    // touchend is also what unlocks sound on iPhone, so it is left alone until sound runs
+    stage.addEventListener('touchend', e => { if (ac && ac.state === 'running') noZoom(e); }, { passive: false });
+    stage.addEventListener('dblclick', noZoom);
+    ['gesturestart', 'gesturechange'].forEach(t => root.addEventListener(t, e => { if (root.classList.contains('is-full')) noZoom(e); }));
     // letter keys play the kit while it is on screen; typing in a field is left alone
     function onKey(e) {
       if (e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.isComposing || e.defaultPrevented || !live()) return;
