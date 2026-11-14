@@ -76,6 +76,9 @@
 
   function mount(host, opt) {
     const T = opt.T || (s => s), audio = opt.audio, src = opt.src || 'sounds/drum-pad-mp3.js';
+    // side of the kit: 1 = right-handed (hi-hat on the left), -1 = left-handed (mirrored). Saved on this device
+    let side = opt.lefty ? -1 : 1;
+    try { const v = localStorage.getItem('soniq-drums-side'); if (v === 'left') side = -1; else if (v === 'right') side = 1; } catch (e) { /* no storage */ }
     let ac = null, kitBus = null, sess = null, armed = false, stuck = false, lastCT = -1, lastAt = 0, waiting = [];
     const voices = {}, outs = {}; // pad id -> playing voices (for choke and the voice cap), pad id -> its output node
     // the kit is on screen (a fixed full-screen box has no offsetParent, so ask for that case by name)
@@ -86,7 +89,7 @@
       if (!kitBus) {
         kitBus = ac.createGain(); kitBus.gain.value = 0.9; kitBus.connect(opt.dest ? opt.dest() : ac.destination);
         // one panner per drum, made once: a hit then only needs a source and a gain
-        PADS.forEach(p => { let o = kitBus; if (p.pan && ac.createStereoPanner) { o = ac.createStereoPanner(); o.pan.value = p.pan; o.connect(kitBus); } outs[p.id] = o; });
+        PADS.forEach(p => { let o = kitBus; if (p.pan && ac.createStereoPanner) { o = ac.createStereoPanner(); o.pan.value = side * p.pan; o.connect(kitBus); } outs[p.id] = o; });
         ac.addEventListener('statechange', onState); onState();
       }
       return ac;
@@ -168,7 +171,7 @@
     PADS.forEach(p => {
       const b = el('button', 'dk-pad dk-' + p.kind + ' dk-' + p.id);
       b.type = 'button'; b.dataset.pad = p.id;
-      b.style.left = (p.x - p.d / 2) + '%'; b.style.top = 'calc(' + p.y + '% - ' + (p.kind === 'pedal' ? p.d / 5 : p.d / 2) + 'cqw)'; b.style.width = p.d + '%';
+      place(b, p); b.style.top = 'calc(' + p.y + '% - ' + (p.kind === 'pedal' ? p.d / 5 : p.d / 2) + 'cqw)'; b.style.width = p.d + '%';
       b.setAttribute('aria-label', T(p.name) + ', ' + T('מקש') + ' ' + keyLabel(p.key));
       b.setAttribute('aria-keyshortcuts', keyLabel(p.key));
       const face = el('span', 'dk-face'); face.setAttribute('aria-hidden', 'true');
@@ -188,9 +191,21 @@
     const status = el('p', 'status-line dk-status'); status.setAttribute('role', 'status');
     const tip = el('p', 'desc dk-tip');
     tip.textContent = T('מכה במרכז חזקה יותר, בקצה רכה יותר. בקצה הסנר יש רים-שוט, ובמרכז הרייד הפעמון.');
-    bar.appendChild(full); root.appendChild(bar); root.appendChild(tip); root.appendChild(status);
+    const flip = el('button', 'dk-side'); flip.type = 'button';
+    flip.innerHTML = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7h12l-3-3M17 17H5l3 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span></span>';
+    function setSide(v, announce) {
+      side = v; flip.setAttribute('aria-pressed', String(v < 0));
+      flip.querySelector('span').textContent = T('מערכת לשמאליים');
+      PADS.forEach(p => place(btns[p.id], p));
+      if (ac && outs) PADS.forEach(p => { const o = outs[p.id]; if (o && o.pan) o.pan.setValueAtTime(side * p.pan, ac.currentTime); });
+      try { localStorage.setItem('soniq-drums-side', v < 0 ? 'left' : 'right'); } catch (e) { /* no storage */ }
+      if (announce) say(v < 0 ? T('המערכת הפוכה: הייהט מימין.') : T('המערכת רגילה: הייהט משמאל.'));
+    }
+    flip.addEventListener('click', () => setSide(-side, true));
+    bar.appendChild(full); bar.appendChild(flip); root.appendChild(bar); root.appendChild(tip); root.appendChild(status);
     host.appendChild(root);
 
+    function place(b, p) { const x = side < 0 ? 100 - p.x : p.x; b.style.left = (x - p.d / 2) + '%'; }
     function el(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
     const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     function flash(p) {
@@ -267,7 +282,7 @@
     function lock() { try { screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* ignore */ } }
     full.addEventListener('click', () => setFull(!root.classList.contains('is-full')));
     document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && root.classList.contains('is-full')) setFull(false); });
-    fullLbl.textContent = T('מסך מלא');
+    fullLbl.textContent = T('מסך מלא'); setSide(side, false);
     function say(t) { status.textContent = ''; setTimeout(() => { status.textContent = t; }, 40); }
 
     // decode now, so the first hit is already instant; and try to wake the sound while the tab's click still counts as a touch
