@@ -2,7 +2,7 @@
    The app's own files are saved at install. Sound samples and fonts from other sites are saved
    the first time they load, so every sound you have played once also works offline.
    Pages: network first (so updates arrive), then the saved copy. */
-const VERSION = 'soniq-v27';
+const VERSION = 'soniq-v29';
 const SHELL = VERSION + '-shell', RUNTIME = 'soniq-runtime';
 const PRECACHE = [
  "./",
@@ -49,7 +49,10 @@ const PRECACHE = [
  "sounds/drum-kit-mp3.js",
  "sounds/tabla-mp3.js",
  "drums.js",
- "sounds/drum-pad-mp3.js"
+ "sounds/drum-pad-mp3.js",
+ "beats.js",
+ "sounds/beats-hiphop-mp3.js",
+ "sounds/beats-electro-mp3.js"
 ];
 
 self.addEventListener('install', e => {
