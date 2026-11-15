@@ -190,7 +190,7 @@
     const fullLbl = full.querySelector('span');
     const status = el('p', 'status-line dk-status'); status.setAttribute('role', 'status');
     const tip = el('p', 'desc dk-tip');
-    tip.textContent = T('מכה במרכז חזקה יותר, בקצה רכה יותר. בקצה הסנר יש רים-שוט, ובמרכז הרייד הפעמון.');
+    tip.textContent = T('מרכז חזק, קצה רך. קצה הסנר: רים-שוט. מרכז הרייד: פעמון.');
     const flip = el('button', 'dk-side'); flip.type = 'button';
     flip.innerHTML = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7h12l-3-3M17 17H5l3 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span></span>';
     function setSide(v, announce) {
