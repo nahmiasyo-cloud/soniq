@@ -913,6 +913,51 @@ html.dk-locked, html.dk-locked body { overflow: hidden; }
 .bt-meter { display: block; height: 6px; margin-top: var(--s3); border-radius: 3px; background: var(--surface-2); overflow: hidden; visibility: hidden; }
 .bt.is-rec .bt-meter { visibility: visible; }
 .bt-meter span { display: block; height: 100%; width: 0; background: var(--chordtone); }
+/* the looper */
+.bt-looper { display: grid; gap: var(--s3); align-content: start; min-width: 0; padding: var(--s3) var(--s4); border-radius: var(--r2); background: var(--surface); }
+.bt-looper:focus { outline: none; }
+.bt-looper .bt-h { margin: 0; }
+.lp-hint { display: flex; gap: var(--s2); align-items: center; margin: 0; color: var(--muted); font-size: var(--fs-s); }
+.lp-hint .ico { width: 18px; height: 18px; flex: none; }
+.lp-len { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); }
+.lp-lenlabel { font-size: var(--fs-s); font-weight: 600; }
+.lp-len .seg button { min-height: 44px; background: var(--surface-2); color: var(--text); cursor: pointer; }
+.lp-len .seg button:hover { background: var(--hover); }
+.lp-len .seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.lp-len .seg button[aria-disabled="true"] { opacity: .5; cursor: default; }
+/* the one big button: its words say what the next press does */
+.lp-main { display: flex; align-items: center; justify-content: center; gap: var(--s3); width: 100%; min-height: 64px; padding: var(--s2) var(--s4); border: 2px solid transparent; border-radius: var(--r3);
+  background: var(--action); color: var(--on-action); font: 700 var(--fs-m)/1.2 var(--font-display); cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.lp-main:hover { background: var(--action-hover); }
+.lp-main:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.lp-main .ico { width: 26px; height: 26px; flex: none; }
+.lp-main.is-busy { background: var(--surface-2); color: var(--text); border-color: var(--chordtone); }
+.lp-main.is-busy:hover { background: var(--hover); }
+.lp-state { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s1) var(--s3); margin: 0; min-height: 1.6em; font-weight: 600; }
+.bt-looper.is-count .lp-text { font-size: var(--fs-m); }
+.lp-micon { display: inline-flex; align-items: center; gap: var(--s1); color: var(--chordtone); font-size: var(--fs-xs); }
+.lp-micon[hidden] { display: none; }
+.lp-micon .ico { width: 16px; height: 16px; }
+/* where the loop is: bars and beats marked, time runs left to right like the step grid */
+.lp-prog { position: relative; height: 16px; border-radius: 8px; background: var(--surface-2); box-shadow: inset 0 0 0 1px #7a6a86; overflow: hidden; }
+.lp-fill { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: var(--accent); }
+.bt-looper.is-rec .lp-fill { background: var(--chordtone); }
+.lp-bars { position: absolute; inset: 0; display: flex; }
+.lp-bars i { flex: 1; border-left: 1px solid rgba(246, 231, 212, .28); }
+.lp-bars i.b { border-left: 2px solid var(--text); }
+.lp-bars i:first-child { border-left: 0; }
+.bt-btn[aria-disabled="true"] { opacity: .5; cursor: default; }
+.bt-lock { margin: calc(-1 * var(--s2)) 0 0; }
+.bt-lock[hidden] { display: none; }
+.lp-sync > summary { display: flex; align-items: center; gap: var(--s2); min-height: 44px; list-style: none; border-radius: var(--r2); font-size: var(--fs-s); font-weight: 600; cursor: pointer; }
+.lp-sync > summary::-webkit-details-marker { display: none; }
+.lp-sync > summary::after { content: ""; flex: none; width: 8px; height: 8px; margin-inline-start: var(--s1); border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.lp-sync[open] > summary::after { transform: rotate(-135deg); }
+.lp-sync > summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.lp-sync .desc { margin: 0 0 var(--s3); }
+.lp-synclabel { margin: var(--s3) 0 var(--s2); font-size: var(--fs-s); font-weight: 600; }
+.lp-syncrow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); margin-bottom: var(--s3); }
+.lp-syncval { min-width: 8ch; text-align: center; font-family: var(--font-mono); font-size: var(--fs-s); font-weight: 700; }
 /* the step grid: time runs left to right in every language */
 .bt-seqbox { min-width: 0; }
 .bt-seqwrap { overflow-x: auto; padding: var(--s2); border-radius: var(--r2); background: var(--surface); scrollbar-width: thin; }
@@ -939,8 +984,9 @@ html.dk-locked, html.dk-locked body { overflow: hidden; }
   .bt-body { grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); align-items: start; }
   .bt-pads { grid-column: 1; grid-row: 1 / span 2; }
   .bt-ctl { grid-column: 2; grid-row: 1; }
-  .bt-sampler { grid-column: 2; grid-row: 2; }
-  .bt-seqbox { grid-column: 1 / -1; grid-row: 3; }
+  .bt-looper { grid-column: 2; grid-row: 2 / span 2; }
+  .bt-sampler { grid-column: 1; grid-row: 3; }
+  .bt-seqbox { grid-column: 1 / -1; grid-row: 4; }
 }
 /* a narrow screen: each pad's 16 steps fold into two lines of eight, so the whole bar is in view with full-size buttons */
 @container (max-width: 520px) {
@@ -959,10 +1005,12 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
 .bt.is-full .bt-tip { display: none; }
 @media (orientation: landscape) {
   .bt.is-full .bt-body { grid-template-columns: min(46vw, calc(100dvh - 72px)) minmax(0, 1fr); align-items: start; gap: var(--s3); }
-  .bt.is-full .bt-pads { grid-column: 1; grid-row: 1 / span 3; max-width: none; position: sticky; top: 0; }
-  .bt.is-full .bt-ctl, .bt.is-full .bt-seqbox, .bt.is-full .bt-sampler { grid-column: 2; }
-  .bt.is-full .bt-seqbox { grid-row: 2; }
-  .bt.is-full .bt-sampler { grid-row: 3; }
+  .bt.is-full .bt-pads { grid-column: 1; grid-row: 1 / span 4; max-width: none; position: sticky; top: 0; }
+  .bt.is-full .bt-ctl, .bt.is-full .bt-looper, .bt.is-full .bt-seqbox, .bt.is-full .bt-sampler { grid-column: 2; }
+  .bt.is-full .bt-ctl { grid-row: 1; }
+  .bt.is-full .bt-looper { grid-row: 2; }
+  .bt.is-full .bt-seqbox { grid-row: 3; }
+  .bt.is-full .bt-sampler { grid-row: 4; }
 }
 </style>
 <script>
@@ -1454,6 +1502,8 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
   Object.assign(EN, {"מערכת לשמאליים":"Left-handed kit","המערכת הפוכה: הייהט מימין.":"Kit mirrored: hi-hat on the right.","המערכת רגילה: הייהט משמאל.":"Standard kit: hi-hat on the left.","טיונר, מטרונום ותופים":"Tuner, metronome & drums","נגנו על התופים באצבעות, גם כמה ביחד. לנגינה נוחה עברו למסך מלא וסובבו את הטלפון לרוחב.":"Play the drums with your fingers, several at once too. For comfortable playing, go full screen and turn your phone sideways.","מערכת תופים":"Drum kit","מקש":"key","הייהט פתוח":"Open hi-hat","קראש":"Crash","טום גבוה":"High tom","טום אמצעי":"Mid tom","הייהט סגור":"Closed hi-hat","בס דראם":"Bass drum","טום רצפה":"Floor tom","פדל הייהט":"Hi-hat pedal","מכה במרכז חזקה יותר, בקצה רכה יותר. בקצה הסנר יש רים-שוט, ובמרכז הרייד הפעמון.":"Hit the centre for a stronger sound, the edge for a softer one. The snare's edge gives a rimshot, the ride's centre the bell.","יציאה ממסך מלא":"Exit full screen","מסך מלא":"Full screen","מסך מלא. Escape או הכפתור יוצאים.":"Full screen. Escape or the button exits.","הדפדפן הזה לא תומך בצליל.":"This browser doesn't support sound.","התופים מוכנים. נגנו!":"The drums are ready. Play!","הצלילים לא נטענו. בדקו את החיבור ונסו שוב.":"The sounds didn't load. Check your connection and try again."});
   // beats
   Object.assign(EN, {"ביטים":"Beats","טיונר, מטרונום, תופים וביטים":"Tuner, metronome, drums & beats","נגנו על 16 פדים, בנו ביט בסיקוונסר של 16 צעדים והקליטו צלילים משלכם. שתי ערכות: היפ-הופ ואלקטרוני.":"Play 16 pads, build a beat in the 16-step sequencer and record your own sounds. Two kits: hip-hop and electronic.","מנגן ומקליט. נגנו על הפדים.":"Playing and recording. Play the pads.","מנגן.":"Playing.","ערכת צלילים":"Sound kit","פדים":"Pads","נגינה והקלטה":"Play and record","נגן":"Play","הקלטה חיה":"Live record","ניקוי התבנית":"Clear pattern","סיקוונסר: 16 צעדים":"Sequencer: 16 steps","כל שורה היא פד. לחצו על צעד כדי להדליק או לכבות אותו. במקלדת: חיצים זזים בין הצעדים, Enter מדליק.":"Each row is a pad. Press a step to switch it on or off. On a keyboard: arrows move between steps, Enter switches one on.","הקלטה עצמית":"Record your own sound","בחרו פד, לחצו על הקלטה והשמיעו צליל של עד 3 שניות: קול, מחיאת כף, כלי. הפד ינגן את ההקלטה שלכם.":"Pick a pad, press record and make a sound of up to 3 seconds: your voice, a clap, an instrument. The pad will play your recording.","הקלטה לפד":"Record to pad","שחזור הצליל המקורי":"Restore original sound","הקלטה שלי":"my recording","הפד הנבחר:":"Selected pad:","עצור":"Stop","צעד":"step","שחזור התבנית":"Restore pattern","הקלטה חיה פועלת. נגנו על הפדים והם נכנסים לתבנית.":"Live record is on. Play the pads and they go into the pattern.","הקלטה חיה מוכנה. לחצו על נגן ונגנו על הפדים עם המטרונום.":"Live record is ready. Press Play and play the pads along with the metronome.","הקלטה חיה כבויה.":"Live record is off.","התבנית שוחזרה.":"Pattern restored.","התבנית נוקתה. לחיצה נוספת משחזרת אותה.":"Pattern cleared. Press again to bring it back.","עצירת ההקלטה":"Stop recording","לא נקלט צליל. נסו שוב, קרוב יותר למיקרופון.":"No sound was picked up. Try again, closer to the microphone.","ההקלטה נשמרה בפד:":"Recording saved to pad:","הקישו עליו כדי לשמוע.":"Tap it to hear it.","המיקרופון לא זמין בדפדפן הזה.":"The microphone isn't available in this browser.","לא נמצא מיקרופון במכשיר הזה.":"No microphone was found on this device.","אין גישה למיקרופון. אשרו אותו בהגדרות הדפדפן ונסו שוב.":"No access to the microphone. Allow it in your browser settings and try again.","מקליט עד 3 שניות. השמיעו את הצליל עכשיו.":"Recording for up to 3 seconds. Make your sound now.","הצליל המקורי חזר לפד:":"Original sound is back on pad:","הפדים מוכנים. נגנו!":"The pads are ready. Play!","קיק":"Kick","808":"808","קלאפ":"Clap","רים":"Rim","נקישת אצבעות":"Finger snap","קיק 2":"Kick 2","סנר 2":"Snare 2","טמבורין":"Tambourine","סקרץ'":"Scratch","סיבוב תקליט":"Vinyl spin","טום":"Tom","בליפ":"Blip","גליץ'":"Glitch","היפ-הופ":"Hip-hop"});
+  // looper
+  Object.assign(EN, {"שכבות בלופ: {0}":"Layers in the loop: {0}","הטמפו נעול כל עוד יש לופ. כדי לשנות טמפו, נקו את הלופ.":"The tempo is locked while there is a loop. To change it, clear the loop.","לופר":"Looper","מומלץ עם אוזניות, כדי שהביט לא ייכנס להקלטה.":"Best with headphones, so the beat stays out of the recording.","אורך הלופ":"Loop length","תיבה אחת":"1 bar","2 תיבות":"2 bars","4 תיבות":"4 bars","הקלט לופ":"Record loop","המיקרופון פתוח":"Microphone open","בטל שכבה אחרונה":"Undo last layer","נקה לופ":"Clear loop","סנכרון ההקלטה עם הביט":"Line up the recording with the beat","אם ההקלטה לא יושבת על הביט, כיילו פעם אחת: בלי אוזניות, בחדר שקט ובעוצמה בינונית. נשמעות 8 נקישות והמכשיר מודד את ההשהיה שלו.":"If your recording does not sit on the beat, calibrate once: no headphones, a quiet room, medium volume. You will hear 8 clicks while the device measures its own delay.","כיול אוטומטי":"Calibrate automatically","כיוון ידני: להזיז את ההקלטות ביחס לביט":"By hand: move the recordings against the beat","מוקדם יותר":"Earlier","מאוחר יותר":"Later","איפוס":"Reset","המיקרופון נותק. ההקלטה בוטלה.":"The microphone was disconnected. Recording cancelled.","ההקלטה נכשלה: לא הגיע צליל מהמיקרופון.":"Recording failed: no sound came from the microphone.","מקליט.":"Recording.","מקליט שכבה {0}.":"Recording layer {0}.","לא נקלט צליל. השכבה לא נוספה.":"No sound was picked up. The layer was not added.","מנגן לופ. שכבות: {0}":"Playing the loop. Layers: {0}","ההקלטה בוטלה.":"Recording cancelled.","יש כבר {0} שכבות, וזה המקסימום. בטלו שכבה כדי להוסיף חדשה.":"There are already {0} layers, which is the most. Undo a layer to add a new one.","ספירה של תיבה אחת, ואז מקליטים. הטמפו נעול עד שמנקים את הלופ.":"One bar of count-in, then recording. The tempo is locked until you clear the loop.","השכבה תוקלט מתחילת הלופ.":"The layer will record from the start of the loop.","הכיול בוטל.":"Calibration cancelled.","אין שכבה לבטל.":"No layer to undo.","השכבה בוטלה. הלופ ריק.":"Layer removed. The loop is empty.","השכבה האחרונה בוטלה. שכבות: {0}":"Last layer removed. Layers: {0}","הלופ שוחזר. שכבות: {0}":"Loop restored. Layers: {0}","אין לופ לנקות.":"No loop to clear.","הלופ נוקה. לחיצה נוספת משחזרת אותו.":"Loop cleared. Press again to bring it back.","אורך הלופ נקבע בהקלטה הראשונה. כדי לשנות אותו, נקו את הלופ.":"The loop length is set by the first recording. To change it, clear the loop.","אפשר לכוון אחרי שההקלטה מסתיימת.":"You can adjust this once the recording is finished.","כיוון ידני":"By hand","מכייל. שקט בבקשה: נשמעות 8 נקישות.":"Calibrating. Quiet please: you will hear 8 clicks.","הכיול הצליח. ההשהיה שנמדדה: {0} ms.":"Calibration done. Measured delay: {0} ms.","הכיול לא הצליח. הוציאו אוזניות, הגבירו את העוצמה ונסו שוב בחדר שקט.":"Calibration did not work. Unplug headphones, turn the volume up and try again in a quiet room.","פותח את המיקרופון…":"Opening the microphone…","מכייל… שקט בבקשה.":"Calibrating… quiet please.","ממתין לתחילת התיבה…":"Waiting for the bar to start…","ספירה: {0}":"Count-in: {0}","מקליט… תיבה {0} מתוך {1}":"Recording… bar {0} of {1}","ממתין לתחילת הלופ…":"Waiting for the loop to start…","תיבה {0} מתוך {1}":"bar {0} of {1}","מקליט שכבה {0}…":"Recording layer {0}…","הלופ עצור. שכבות: {0}":"Loop stopped. Layers: {0}","הלופ ריק.":"The loop is empty.","בטל כיול":"Cancel calibration","בטל הקלטה":"Cancel recording","הוסף שכבה":"Add layer","נגן לופ":"Play loop","שחזר לופ":"Restore loop","המכשיר כויל. אפשר לכייל שוב אחרי החלפת אוזניות או רמקול.":"This device is calibrated. Calibrate again after changing headphones or speaker.","עוד לא כויל: ההשהיה מוערכת לפי מה שהדפדפן מדווח.":"Not calibrated yet: the delay is estimated from what the browser reports.","הסנכרון אופס.":"Timing reset."});
   function T(a, ...vals) {
     if (Array.isArray(a) && a.raw) {
       const key = a.reduce((k, part, i) => k + (i ? '{' + (i - 1) + '}' : '') + part, '');
@@ -5095,11 +5145,11 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     if (window.SoniqDrums) return go();
     const sc = document.createElement('script'); sc.src = 'drums.js'; sc.onload = go; document.head.appendChild(sc);
   }
-  // the beat pads load the same way, when their tab opens
+  // the beat pads load the same way, when their tab opens. chain: the master compressor looks 6 ms ahead, which the looper has to know
   let beats = null;
   function openBeats() {
     if (beats) { beats.prepare(); return; }
-    const go = () => { if (!window.SoniqBeats || beats) return; beats = window.SoniqBeats.mount($('beats-host'), { audio, dest: () => bus(1, 0), T }); beats.prepare(); };
+    const go = () => { if (!window.SoniqBeats || beats) return; beats = window.SoniqBeats.mount($('beats-host'), { audio, dest: () => bus(1, 0), T, chain: 0.006 }); beats.prepare(); };
     if (window.SoniqBeats) return go();
     const sc = document.createElement('script'); sc.src = 'beats.js'; sc.onload = go; document.head.appendChild(sc);
   }
