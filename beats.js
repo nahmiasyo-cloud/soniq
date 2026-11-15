@@ -408,18 +408,18 @@
     }), tempoIn = tempoF.querySelector('input');
     const lockNote = el('p', 'desc bt-lock', T('הטמפו נעול כל עוד יש לופ. כדי לשנות טמפו, נקו את הלופ.')); lockNote.id = 'bt-lock' + Math.random().toString(36).slice(2, 7); lockNote.hidden = true;
     ctl.appendChild(tempoF); ctl.appendChild(lockNote);
-    ctl.appendChild(slider(T('סווינג'), 0, 60, swing, v => v + '%', (v, end) => { swing = v; if (end) { save(); say(T('סווינג') + ' ' + v + '%'); } }));
+    const swingF = slider(T('סווינג'), 0, 60, swing, v => v + '%', (v, end) => { swing = v; if (end) { save(); say(T('סווינג') + ' ' + v + '%'); } }); swingF.classList.add('lvl-adv'); ctl.appendChild(swingF);
 
     const seqBox = el('div', 'bt-seqbox');
     const seqH = el('h4', 'bt-h', T('סיקוונסר: 16 צעדים')); seqH.id = 'bt-seq-h' + Math.random().toString(36).slice(2, 7);
-    const seqTip = el('p', 'desc bt-tip', T('כל שורה היא פד. לחצו על צעד כדי להדליק או לכבות אותו. במקלדת: חיצים זזים בין הצעדים, Enter מדליק.'));
+    const seqTip = el('p', 'desc bt-tip kbd-only', T('במקלדת: חיצים זזים בין הצעדים, Enter מדליק.'));
     const wrap = el('div', 'bt-seqwrap'); wrap.setAttribute('dir', 'ltr');
     const seq = el('div', 'bt-seq'); seq.setAttribute('role', 'group'); seq.setAttribute('aria-labelledby', seqH.id);
     wrap.appendChild(seq); seqBox.appendChild(seqH); seqBox.appendChild(seqTip); seqBox.appendChild(wrap);
 
     const smp = el('div', 'bt-sampler'); smp.setAttribute('role', 'group');
     const smpH = el('h4', 'bt-h', T('הקלטה עצמית')); smpH.id = 'bt-smp-h' + Math.random().toString(36).slice(2, 7); smp.setAttribute('aria-labelledby', smpH.id);
-    const smpTip = el('p', 'desc bt-tip', T('בחרו פד, לחצו על הקלטה והשמיעו צליל של עד 3 שניות: קול, מחיאת כף, כלי. הפד ינגן את ההקלטה שלכם.'));
+    const smpTip = el('p', 'desc bt-tip', T('בחרו פד והקליטו עליו צליל של עד 3 שניות.'));
     const smpSel = el('p', 'bt-sel');
     const micB = btn('bt-btn bt-mic', T('הקלטה לפד'), ICON.mic);
     const restB = btn('bt-btn bt-restore', T('שחזור הצליל המקורי'), ICON.back);
@@ -467,7 +467,18 @@
     [loopH, loopHint, lenRow, loopMain, loopState, loopProg, loopRow, sync].forEach(x => loopBox.appendChild(x));
 
     const status = el('p', 'status-line bt-status'); status.setAttribute('role', 'status');
-    body.appendChild(grid); body.appendChild(ctl); body.appendChild(loopBox); body.appendChild(seqBox); body.appendChild(smp);
+    // one tool at a time under the pads: sequencer, looper or your own sound
+    const VIEWS = [['seq', T('סיקוונסר'), seqBox], ['loop', T('לופר'), loopBox], ['own', T('צליל משלי'), smp]];
+    let view = 'seq'; try { const v = localStorage.getItem('soniq-beats-view'); if (VIEWS.some(x => x[0] === v)) view = v; } catch (e) { /* no storage */ }
+    const views = el('div', 'seg bt-views'); views.setAttribute('role', 'group'); views.setAttribute('aria-label', T('כלי עבודה'));
+    function setView(v) {
+      view = v; try { localStorage.setItem('soniq-beats-view', v); } catch (e) { /* no storage */ }
+      VIEWS.forEach(([k, , box]) => { box.hidden = k !== v; });
+      [...views.children].forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+    }
+    VIEWS.forEach(([k, t]) => { const b = el('button', '', t); b.type = 'button'; b.dataset.v = k; b.addEventListener('click', () => setView(k)); views.appendChild(b); });
+    body.appendChild(grid); body.appendChild(ctl); body.appendChild(views); body.appendChild(seqBox); body.appendChild(loopBox); body.appendChild(smp);
+    setView(view);
     root.appendChild(bar); root.appendChild(body); root.appendChild(status); host.appendChild(root);
 
     function say(t) { status.textContent = ''; setTimeout(() => { status.textContent = t; }, 40); }
