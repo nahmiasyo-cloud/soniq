@@ -809,6 +809,24 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
   .bp.is-full .neck-play { --rh: calc((100vw - 70px) / 4); }
   .bp.is-full .dk-bar { inset-inline-start: 50%; transform: translateX(50%); }
 }
+
+/* ---------- playable keys ---------- */
+.kp-snd { margin-bottom: var(--s3); }
+.kp-stage { padding: var(--s3); }
+.piano-play { height: 200px; min-width: 640px; touch-action: pan-x; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.piano-play .key { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.piano-play .key.white.down { background: #ffd9e4; box-shadow: inset 0 -6px 0 var(--chordtone); }
+.piano-play .key.black.down { background: #5a2440; box-shadow: inset 0 -5px 0 var(--chordtone); }
+.piano-play .key:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+.kname { font: 700 12px/1 var(--font-mono); color: #3a3340; pointer-events: none; }
+.key.black .kname { color: #e9e3f0; font-size: 10px; }
+.kp.is-full .kp-snd { position: absolute; top: max(8px, env(safe-area-inset-top)); inset-inline-end: max(8px, env(safe-area-inset-right)); margin: 0; z-index: 2; }
+.kp.is-full .piano-play { min-width: 0; height: calc(100dvh - 90px); touch-action: none; }
+@media (orientation: portrait) {
+  .kp.is-full .bp-scroll { width: calc(100dvh - 110px); }
+  .kp.is-full .piano-play { height: calc(100vw - 40px); }
+  .kp.is-full .kp-snd { display: none; }
+}
 /* ---------- drum kit (drums.js) ---------- */
 #tool-drums { grid-column: 1 / -1; }
 .dk-stage { position: relative; width: 100%; aspect-ratio: 2 / 1; container-type: inline-size; border-radius: var(--r3); overflow: hidden;
@@ -1293,10 +1311,17 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
         </div>
 
         <div id="tool-inst" hidden>
-          <section class="card" aria-labelledby="h-bassplay">
-            <h3 id="h-bassplay" class="ico-title"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 21l7-7M10 14c-1.5-1.5-1-4 1-5l7-6 3 3-6 7c-1 2-3.5 2.5-5 1z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>בס</h3>
-            <p class="desc">נגנו על צוואר בס אמיתי: לחיצה על מיתר בסריג מנגנת את התו, וגרירה לאורך המיתר מחליקה לתו הבא. לנגינה נוחה עברו למסך מלא.</p>
-            <div id="bass-host" style="margin-top: var(--s4)"></div>
+          <section class="card" aria-labelledby="h-inst">
+            <h3 id="h-inst" class="ico-title"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 21l7-7M10 14c-1.5-1.5-1-4 1-5l7-6 3 3-6 7c-1 2-3.5 2.5-5 1z" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>כלים</h3>
+            <div class="seg" id="inst-pick" role="group" aria-labelledby="h-inst" style="margin-top: var(--s3)"></div>
+            <div id="play-bass">
+              <p class="desc" style="margin-top: var(--s3)">נגנו על צוואר בס אמיתי: לחיצה על מיתר בסריג מנגנת את התו, וגרירה לאורך המיתר מחליקה לתו הבא. לנגינה נוחה עברו למסך מלא.</p>
+              <div id="bass-host" style="margin-top: var(--s4)"></div>
+            </div>
+            <div id="play-keys" hidden>
+              <p class="desc" style="margin-top: var(--s3)">נגנו על הקלידים באצבעות, גם אקורדים. החזיקו קליד כדי שהצליל יימשך, וגררו לאורך המקלדת לגליסנדו. לנגינה נוחה עברו למסך מלא.</p>
+              <div id="keys-host" style="margin-top: var(--s4)"></div>
+            </div>
           </section>
         </div>
         </div>
@@ -1537,7 +1562,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
   // beats
   Object.assign(EN, {"ביטים":"Beats","טיונר, מטרונום, תופים וביטים":"Tuner, metronome, drums & beats","נגנו על 16 פדים, בנו ביט בסיקוונסר של 16 צעדים והקליטו צלילים משלכם. שתי ערכות: היפ-הופ ואלקטרוני.":"Play 16 pads, build a beat in the 16-step sequencer and record your own sounds. Two kits: hip-hop and electronic.","מנגן ומקליט. נגנו על הפדים.":"Playing and recording. Play the pads.","מנגן.":"Playing.","ערכת צלילים":"Sound kit","פדים":"Pads","נגינה והקלטה":"Play and record","נגן":"Play","הקלטה חיה":"Live record","ניקוי התבנית":"Clear pattern","סיקוונסר: 16 צעדים":"Sequencer: 16 steps","כל שורה היא פד. לחצו על צעד כדי להדליק או לכבות אותו. במקלדת: חיצים זזים בין הצעדים, Enter מדליק.":"Each row is a pad. Press a step to switch it on or off. On a keyboard: arrows move between steps, Enter switches one on.","הקלטה עצמית":"Record your own sound","בחרו פד, לחצו על הקלטה והשמיעו צליל של עד 3 שניות: קול, מחיאת כף, כלי. הפד ינגן את ההקלטה שלכם.":"Pick a pad, press record and make a sound of up to 3 seconds: your voice, a clap, an instrument. The pad will play your recording.","הקלטה לפד":"Record to pad","שחזור הצליל המקורי":"Restore original sound","הקלטה שלי":"my recording","הפד הנבחר:":"Selected pad:","עצור":"Stop","צעד":"step","שחזור התבנית":"Restore pattern","הקלטה חיה פועלת. נגנו על הפדים והם נכנסים לתבנית.":"Live record is on. Play the pads and they go into the pattern.","הקלטה חיה מוכנה. לחצו על נגן ונגנו על הפדים עם המטרונום.":"Live record is ready. Press Play and play the pads along with the metronome.","הקלטה חיה כבויה.":"Live record is off.","התבנית שוחזרה.":"Pattern restored.","התבנית נוקתה. לחיצה נוספת משחזרת אותה.":"Pattern cleared. Press again to bring it back.","עצירת ההקלטה":"Stop recording","לא נקלט צליל. נסו שוב, קרוב יותר למיקרופון.":"No sound was picked up. Try again, closer to the microphone.","ההקלטה נשמרה בפד:":"Recording saved to pad:","הקישו עליו כדי לשמוע.":"Tap it to hear it.","המיקרופון לא זמין בדפדפן הזה.":"The microphone isn't available in this browser.","לא נמצא מיקרופון במכשיר הזה.":"No microphone was found on this device.","אין גישה למיקרופון. אשרו אותו בהגדרות הדפדפן ונסו שוב.":"No access to the microphone. Allow it in your browser settings and try again.","מקליט עד 3 שניות. השמיעו את הצליל עכשיו.":"Recording for up to 3 seconds. Make your sound now.","הצליל המקורי חזר לפד:":"Original sound is back on pad:","הפדים מוכנים. נגנו!":"The pads are ready. Play!","קיק":"Kick","808":"808","קלאפ":"Clap","רים":"Rim","נקישת אצבעות":"Finger snap","קיק 2":"Kick 2","סנר 2":"Snare 2","טמבורין":"Tambourine","סקרץ'":"Scratch","סיבוב תקליט":"Vinyl spin","טום":"Tom","בליפ":"Blip","גליץ'":"Glitch","היפ-הופ":"Hip-hop"});
   // looper
-  Object.assign(EN, {"טיונר, מטרונום, תופים, ביטים וכלים":"Tuner, metronome, drums, beats & instruments","כלים":"Instruments","בס":"Bass","נגנו על צוואר בס אמיתי: לחיצה על מיתר בסריג מנגנת את התו, וגרירה לאורך המיתר מחליקה לתו הבא. לנגינה נוחה עברו למסך מלא.":"Play a real bass neck: touch a string at a fret to play the note, and drag along the string to slide to the next one. For comfortable playing, go full screen.","צוואר בס לנגינה":"Playable bass neck","שמות התווים":"Note names","השתקה בהרמת האצבע":"Mute when lifting","במקלדת: חצים לבחירת מיתר וסריג, Enter או רווח לנגינה.":"Keyboard: arrows choose string and fret, Enter or Space plays.","שמות התווים מוצגים.":"Note names shown.","שמות התווים מוסתרים.":"Note names hidden.","התו ממשיך להישמע עד התו הבא על אותו מיתר.":"Each note rings until the next note on the same string.","הרמת האצבע משתיקה את התו, כמו בבס אמיתי.":"Lifting your finger mutes the note, like on a real bass.","הבס מוכן. נגנו!":"The bass is ready. Play!","שכבות בלופ: {0}":"Layers in the loop: {0}","הטמפו נעול כל עוד יש לופ. כדי לשנות טמפו, נקו את הלופ.":"The tempo is locked while there is a loop. To change it, clear the loop.","לופר":"Looper","מומלץ עם אוזניות, כדי שהביט לא ייכנס להקלטה.":"Best with headphones, so the beat stays out of the recording.","אורך הלופ":"Loop length","תיבה אחת":"1 bar","2 תיבות":"2 bars","4 תיבות":"4 bars","הקלט לופ":"Record loop","המיקרופון פתוח":"Microphone open","בטל שכבה אחרונה":"Undo last layer","נקה לופ":"Clear loop","סנכרון ההקלטה עם הביט":"Line up the recording with the beat","אם ההקלטה לא יושבת על הביט, כיילו פעם אחת: בלי אוזניות, בחדר שקט ובעוצמה בינונית. נשמעות 8 נקישות והמכשיר מודד את ההשהיה שלו.":"If your recording does not sit on the beat, calibrate once: no headphones, a quiet room, medium volume. You will hear 8 clicks while the device measures its own delay.","כיול אוטומטי":"Calibrate automatically","כיוון ידני: להזיז את ההקלטות ביחס לביט":"By hand: move the recordings against the beat","מוקדם יותר":"Earlier","מאוחר יותר":"Later","איפוס":"Reset","המיקרופון נותק. ההקלטה בוטלה.":"The microphone was disconnected. Recording cancelled.","ההקלטה נכשלה: לא הגיע צליל מהמיקרופון.":"Recording failed: no sound came from the microphone.","מקליט.":"Recording.","מקליט שכבה {0}.":"Recording layer {0}.","לא נקלט צליל. השכבה לא נוספה.":"No sound was picked up. The layer was not added.","מנגן לופ. שכבות: {0}":"Playing the loop. Layers: {0}","ההקלטה בוטלה.":"Recording cancelled.","יש כבר {0} שכבות, וזה המקסימום. בטלו שכבה כדי להוסיף חדשה.":"There are already {0} layers, which is the most. Undo a layer to add a new one.","ספירה של תיבה אחת, ואז מקליטים. הטמפו נעול עד שמנקים את הלופ.":"One bar of count-in, then recording. The tempo is locked until you clear the loop.","השכבה תוקלט מתחילת הלופ.":"The layer will record from the start of the loop.","הכיול בוטל.":"Calibration cancelled.","אין שכבה לבטל.":"No layer to undo.","השכבה בוטלה. הלופ ריק.":"Layer removed. The loop is empty.","השכבה האחרונה בוטלה. שכבות: {0}":"Last layer removed. Layers: {0}","הלופ שוחזר. שכבות: {0}":"Loop restored. Layers: {0}","אין לופ לנקות.":"No loop to clear.","הלופ נוקה. לחיצה נוספת משחזרת אותו.":"Loop cleared. Press again to bring it back.","אורך הלופ נקבע בהקלטה הראשונה. כדי לשנות אותו, נקו את הלופ.":"The loop length is set by the first recording. To change it, clear the loop.","אפשר לכוון אחרי שההקלטה מסתיימת.":"You can adjust this once the recording is finished.","כיוון ידני":"By hand","מכייל. שקט בבקשה: נשמעות 8 נקישות.":"Calibrating. Quiet please: you will hear 8 clicks.","הכיול הצליח. ההשהיה שנמדדה: {0} ms.":"Calibration done. Measured delay: {0} ms.","הכיול לא הצליח. הוציאו אוזניות, הגבירו את העוצמה ונסו שוב בחדר שקט.":"Calibration did not work. Unplug headphones, turn the volume up and try again in a quiet room.","פותח את המיקרופון…":"Opening the microphone…","מכייל… שקט בבקשה.":"Calibrating… quiet please.","ממתין לתחילת התיבה…":"Waiting for the bar to start…","ספירה: {0}":"Count-in: {0}","מקליט… תיבה {0} מתוך {1}":"Recording… bar {0} of {1}","ממתין לתחילת הלופ…":"Waiting for the loop to start…","תיבה {0} מתוך {1}":"bar {0} of {1}","מקליט שכבה {0}…":"Recording layer {0}…","הלופ עצור. שכבות: {0}":"Loop stopped. Layers: {0}","הלופ ריק.":"The loop is empty.","בטל כיול":"Cancel calibration","בטל הקלטה":"Cancel recording","הוסף שכבה":"Add layer","נגן לופ":"Play loop","שחזר לופ":"Restore loop","המכשיר כויל. אפשר לכייל שוב אחרי החלפת אוזניות או רמקול.":"This device is calibrated. Calibrate again after changing headphones or speaker.","עוד לא כויל: ההשהיה מוערכת לפי מה שהדפדפן מדווח.":"Not calibrated yet: the delay is estimated from what the browser reports.","הסנכרון אופס.":"Timing reset."});
+  Object.assign(EN, {"קלידים":"Keys","נגנו על הקלידים באצבעות, גם אקורדים. החזיקו קליד כדי שהצליל יימשך, וגררו לאורך המקלדת לגליסנדו. לנגינה נוחה עברו למסך מלא.":"Play the keys with your fingers, chords too. Hold a key to sustain it, and drag along the keyboard for a glissando. For comfortable playing, go full screen.","פסנתר חשמלי":"Electric piano","אורגן":"Organ","ויברפון":"Vibraphone","מקלדת לנגינה":"Playable keyboard","אוקטבה למטה":"Octave down","אוקטבה למעלה":"Octave up","במקלדת: חצים לבחירת קליד, Enter או רווח לנגינה.":"Keyboard: arrows choose a key, Enter or Space plays.","האוקטבה הנמוכה: {0}":"Lowest octave: {0}","הקלידים מוכנים. נגנו!":"The keys are ready. Play!","טיונר, מטרונום, תופים, ביטים וכלים":"Tuner, metronome, drums, beats & instruments","כלים":"Instruments","בס":"Bass","נגנו על צוואר בס אמיתי: לחיצה על מיתר בסריג מנגנת את התו, וגרירה לאורך המיתר מחליקה לתו הבא. לנגינה נוחה עברו למסך מלא.":"Play a real bass neck: touch a string at a fret to play the note, and drag along the string to slide to the next one. For comfortable playing, go full screen.","צוואר בס לנגינה":"Playable bass neck","שמות התווים":"Note names","השתקה בהרמת האצבע":"Mute when lifting","במקלדת: חצים לבחירת מיתר וסריג, Enter או רווח לנגינה.":"Keyboard: arrows choose string and fret, Enter or Space plays.","שמות התווים מוצגים.":"Note names shown.","שמות התווים מוסתרים.":"Note names hidden.","התו ממשיך להישמע עד התו הבא על אותו מיתר.":"Each note rings until the next note on the same string.","הרמת האצבע משתיקה את התו, כמו בבס אמיתי.":"Lifting your finger mutes the note, like on a real bass.","הבס מוכן. נגנו!":"The bass is ready. Play!","שכבות בלופ: {0}":"Layers in the loop: {0}","הטמפו נעול כל עוד יש לופ. כדי לשנות טמפו, נקו את הלופ.":"The tempo is locked while there is a loop. To change it, clear the loop.","לופר":"Looper","מומלץ עם אוזניות, כדי שהביט לא ייכנס להקלטה.":"Best with headphones, so the beat stays out of the recording.","אורך הלופ":"Loop length","תיבה אחת":"1 bar","2 תיבות":"2 bars","4 תיבות":"4 bars","הקלט לופ":"Record loop","המיקרופון פתוח":"Microphone open","בטל שכבה אחרונה":"Undo last layer","נקה לופ":"Clear loop","סנכרון ההקלטה עם הביט":"Line up the recording with the beat","אם ההקלטה לא יושבת על הביט, כיילו פעם אחת: בלי אוזניות, בחדר שקט ובעוצמה בינונית. נשמעות 8 נקישות והמכשיר מודד את ההשהיה שלו.":"If your recording does not sit on the beat, calibrate once: no headphones, a quiet room, medium volume. You will hear 8 clicks while the device measures its own delay.","כיול אוטומטי":"Calibrate automatically","כיוון ידני: להזיז את ההקלטות ביחס לביט":"By hand: move the recordings against the beat","מוקדם יותר":"Earlier","מאוחר יותר":"Later","איפוס":"Reset","המיקרופון נותק. ההקלטה בוטלה.":"The microphone was disconnected. Recording cancelled.","ההקלטה נכשלה: לא הגיע צליל מהמיקרופון.":"Recording failed: no sound came from the microphone.","מקליט.":"Recording.","מקליט שכבה {0}.":"Recording layer {0}.","לא נקלט צליל. השכבה לא נוספה.":"No sound was picked up. The layer was not added.","מנגן לופ. שכבות: {0}":"Playing the loop. Layers: {0}","ההקלטה בוטלה.":"Recording cancelled.","יש כבר {0} שכבות, וזה המקסימום. בטלו שכבה כדי להוסיף חדשה.":"There are already {0} layers, which is the most. Undo a layer to add a new one.","ספירה של תיבה אחת, ואז מקליטים. הטמפו נעול עד שמנקים את הלופ.":"One bar of count-in, then recording. The tempo is locked until you clear the loop.","השכבה תוקלט מתחילת הלופ.":"The layer will record from the start of the loop.","הכיול בוטל.":"Calibration cancelled.","אין שכבה לבטל.":"No layer to undo.","השכבה בוטלה. הלופ ריק.":"Layer removed. The loop is empty.","השכבה האחרונה בוטלה. שכבות: {0}":"Last layer removed. Layers: {0}","הלופ שוחזר. שכבות: {0}":"Loop restored. Layers: {0}","אין לופ לנקות.":"No loop to clear.","הלופ נוקה. לחיצה נוספת משחזרת אותו.":"Loop cleared. Press again to bring it back.","אורך הלופ נקבע בהקלטה הראשונה. כדי לשנות אותו, נקו את הלופ.":"The loop length is set by the first recording. To change it, clear the loop.","אפשר לכוון אחרי שההקלטה מסתיימת.":"You can adjust this once the recording is finished.","כיוון ידני":"By hand","מכייל. שקט בבקשה: נשמעות 8 נקישות.":"Calibrating. Quiet please: you will hear 8 clicks.","הכיול הצליח. ההשהיה שנמדדה: {0} ms.":"Calibration done. Measured delay: {0} ms.","הכיול לא הצליח. הוציאו אוזניות, הגבירו את העוצמה ונסו שוב בחדר שקט.":"Calibration did not work. Unplug headphones, turn the volume up and try again in a quiet room.","פותח את המיקרופון…":"Opening the microphone…","מכייל… שקט בבקשה.":"Calibrating… quiet please.","ממתין לתחילת התיבה…":"Waiting for the bar to start…","ספירה: {0}":"Count-in: {0}","מקליט… תיבה {0} מתוך {1}":"Recording… bar {0} of {1}","ממתין לתחילת הלופ…":"Waiting for the loop to start…","תיבה {0} מתוך {1}":"bar {0} of {1}","מקליט שכבה {0}…":"Recording layer {0}…","הלופ עצור. שכבות: {0}":"Loop stopped. Layers: {0}","הלופ ריק.":"The loop is empty.","בטל כיול":"Cancel calibration","בטל הקלטה":"Cancel recording","הוסף שכבה":"Add layer","נגן לופ":"Play loop","שחזר לופ":"Restore loop","המכשיר כויל. אפשר לכייל שוב אחרי החלפת אוזניות או רמקול.":"This device is calibrated. Calibrate again after changing headphones or speaker.","עוד לא כויל: ההשהיה מוערכת לפי מה שהדפדפן מדווח.":"Not calibrated yet: the delay is estimated from what the browser reports.","הסנכרון אופס.":"Timing reset."});
   function T(a, ...vals) {
     if (Array.isArray(a) && a.raw) {
       const key = a.reduce((k, part, i) => k + (i ? '{' + (i - 1) + '}' : '') + part, '');
@@ -5077,7 +5102,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     if (!TU.loop && refStop) refStop(); else if (TU.loop) refTone(tuning[2][TU.sel], true);
     say(TU.loop ? T('צליל רציף: הצליל ממשיך עד שעוצרים.') : T('הצליל הרציף נעצר.'), true);
   });
-  window.addEventListener('hashchange', () => { if (!/tools/.test(location.hash)) { if (drums) drums.stop(); if (beats) beats.stop(); if (bassPlay) bassPlay.stop(); stopMic(); if (TU.loop && refStop) refStop(); } });
+  window.addEventListener('hashchange', () => { if (!/tools/.test(location.hash)) { if (drums) drums.stop(); if (beats) beats.stop(); if (bassPlay) bassPlay.stop(); if (keysPlay) keysPlay.stop(); stopMic(); if (TU.loop && refStop) refStop(); } });
   const tunSel = $('tuner-tunings');
   [['guitar', T('גיטרה')], ['bass', T('בס')], ['other', T('עוד כלים')], ['any', T('כל כלי: נשיפה, קשת, שירה')]].forEach(([g, label]) => {
     const og = h('optgroup', { label });
@@ -5295,10 +5320,148 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     }
     return { prepare, stop: () => { if (root.classList.contains('is-full')) setFull(false); if (AC) Object.keys(voices).forEach(k => fade(voices[k], AC.currentTime, 0.05)); } };
   }
+  /* ---------- playable keys: multi-touch, sustain while held, glissando, 4 sounds, octave shift ---------- */
+  let keysPlay = null;
+  function openKeys() { if (!keysPlay) keysPlay = makeKeysPlay($('keys-host')); keysPlay.prepare(); }
+  function makeKeysPlay(host) {
+    const SOUNDS = [['acoustic_grand_piano', T('פסנתר'), 0.35], ['electric_piano_1', T('פסנתר חשמלי'), 0.3], ['drawbar_organ', T('אורגן'), 0.06], ['vibraphone', T('ויברפון'), 0.6]];
+    let snd = SOUNDS[0][0], rel = SOUNDS[0][2], lo = 48, names = false, out = null;
+    try { const v = JSON.parse(localStorage.getItem('soniq-keys') || '{}'); if (SOUNDS.some(x => x[0] === v.snd)) snd = v.snd; if (v.lo >= 24 && v.lo <= 72) lo = v.lo; names = !!v.names; } catch (e) { /* no storage */ }
+    rel = SOUNDS.find(x => x[0] === snd)[2];
+    const save = () => { try { localStorage.setItem('soniq-keys', JSON.stringify({ snd, lo, names })); } catch (e) { /* no storage */ } };
+    const N = 25;  // two octaves and the top C
+    const voices = new Map(), owner = new Map();  // midi -> voice; pointerId -> key
+    const kb = h('div', { class: 'piano piano-play', dir: 'ltr', role: 'group', 'aria-label': T('מקלדת לנגינה') });
+    const stage = h('div', { class: 'bp-stage kp-stage' }, kb);
+    const status = h('p', { class: 'status-line', role: 'status' });
+    const say = t => { status.textContent = ''; setTimeout(() => { status.textContent = t; }, 40); };
+    const btn = (cls, ico, txt) => { const b = h('button', { type: 'button', class: cls }); b.innerHTML = ico; b.appendChild(h('span', {}, txt)); return b; };
+    const full = btn('dk-full', '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>', T('מסך מלא'));
+    full.setAttribute('aria-pressed', 'false');
+    const down = btn('dk-side', '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>', T('אוקטבה למטה'));
+    const up = btn('dk-side', '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>', T('אוקטבה למעלה'));
+    const nameBtn = btn('dk-side', '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 19V5l7 9 7-9v14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>', T('שמות התווים'));
+    const sndSeg = h('div', { class: 'seg kp-snd', role: 'group', 'aria-label': T('צליל') });
+    const bar = h('div', { class: 'dk-bar' }, full, down, up, nameBtn);
+    const root = h('div', { class: 'bp kp' }, sndSeg, h('div', { class: 'bp-scroll' }, stage), bar, h('p', { class: 'desc dk-tip' }, T('במקלדת: חצים לבחירת קליד, Enter או רווח לנגינה.')), status);
+    host.textContent = ''; host.appendChild(root);
+    let cells = [];
+
+    function build() {
+      kb.textContent = ''; cells = [];
+      const whites = []; for (let m = lo; m < lo + N; m++) if (!BLACK.has(m % 12)) whites.push(m);
+      const W = 100 / whites.length;
+      for (let m = lo; m < lo + N; m++) {
+        const black = BLACK.has(m % 12);
+        const left = black ? whites.indexOf(m - 1) * W + W * 0.66 : whites.indexOf(m) * W;
+        const b = h('button', { type: 'button', class: 'key ' + (black ? 'black' : 'white'), tabindex: '-1', style: `left:${left.toFixed(3)}%;width:${(black ? W * 0.68 : W).toFixed(3)}%` });
+        const name = NAME_SHARP[m % 12], oct = Math.floor(m / 12) - 1;
+        b.setAttribute('aria-label', T`קליד ${disp(name)}, אוקטבה ${oct}`);
+        if (names && (!black || true)) b.appendChild(h('span', { class: 'kname', 'aria-hidden': 'true', lang: 'en' }, disp(name) + (m % 12 === 0 ? oct : '')));
+        const c = { btn: b, midi: m, i: m - lo }; cells.push(c); kb.appendChild(b);
+        b.addEventListener('click', () => { if (b._ptr && performance.now() - b._ptr < 700) return; strike(c); setTimeout(() => release(c), 600); });
+      }
+      const f = cells.find(c => c.midi % 12 === 0) || cells[0]; f.btn.tabIndex = 0;
+      down.disabled = lo <= 24; up.disabled = lo >= 72;
+      nameBtn.setAttribute('aria-pressed', String(names));
+    }
+    function setSound(v) {
+      snd = v; rel = SOUNDS.find(x => x[0] === v)[2]; save();
+      [...sndSeg.children].forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+      prepare(true);
+    }
+    SOUNDS.forEach(([v, t]) => { const b = h('button', { type: 'button', 'data-v': v, 'aria-pressed': String(v === snd) }, t); b.addEventListener('click', () => setSound(v)); sndSeg.appendChild(b); });
+    down.addEventListener('click', () => { lo = Math.max(24, lo - 12); save(); build(); prepare(); say(T`האוקטבה הנמוכה: ${Math.floor(lo / 12) - 1}`); });
+    up.addEventListener('click', () => { lo = Math.min(72, lo + 12); save(); build(); prepare(); say(T`האוקטבה הנמוכה: ${Math.floor(lo / 12) - 1}`); });
+    nameBtn.addEventListener('click', () => { names = !names; save(); build(); say(names ? T('שמות התווים מוצגים.') : T('שמות התווים מוסתרים.')); });
+
+    function fade(v, len) { if (!v || v.dead || !AC) return; v.dead = true; const at = AC.currentTime; try { v.g.gain.cancelScheduledValues(at); v.g.gain.setValueAtTime(v.vol, at); v.g.gain.linearRampToValueAtTime(0, at + len); v.src.stop(at + len + 0.02); } catch (e) { /* stopped */ } }
+    function strike(c) {
+      const ac = wake(); if (!ac) return;
+      const name = snd, o = SF[name];
+      if (!o || o.state !== 'ready') { loadSF(name).then(ok => { if (ok) strike(c); }); return; }
+      const k = nearestKey(o, c.midi), b = o.bufs.get(k);
+      if (!b) { decodeKey(o, k).then(x => { if (x) strike(c); }); return; }
+      if (!out) out = bus(1, 0.18);
+      fade(voices.get(c.midi), 0.02);  // the same key again: restart it
+      const src = ac.createBufferSource(), g = ac.createGain(), vol = 0.9;
+      src.buffer = b; src.playbackRate.value = Math.pow(2, (c.midi - k) / 12) * SET.a4 / 440;
+      g.gain.value = vol; src.connect(g); g.connect(out); src.start(0, b.lead || 0);
+      const v = { src, g, vol }; voices.set(c.midi, v);
+      src.onended = () => { try { g.disconnect(); } catch (e) { /* gone */ } if (voices.get(c.midi) === v) voices.delete(c.midi); };
+      c.btn.classList.add('down');
+    }
+    function release(c) { c.btn.classList.remove('down'); fade(voices.get(c.midi), rel); }
+    const keyAt = (x, y) => { const el = document.elementFromPoint(x, y), b = el && el.closest && el.closest('.piano-play .key'); return b ? cells.find(c => c.btn === b) : null; };
+    kb.addEventListener('pointerdown', e => {
+      if (e.button > 0) return;
+      const c = keyAt(e.clientX, e.clientY); if (!c) return;
+      if (root.classList.contains('is-full') || e.pointerType !== 'touch') e.preventDefault();
+      c.btn._ptr = performance.now(); owner.set(e.pointerId, c); strike(c);
+    });
+    kb.addEventListener('pointermove', e => {
+      const prev = owner.get(e.pointerId); if (!prev) return;
+      const c = keyAt(e.clientX, e.clientY); if (!c || c === prev) return;
+      c.btn._ptr = performance.now(); owner.set(e.pointerId, c); release(prev); strike(c);  // glissando
+    });
+    const lift = e => { const c = owner.get(e.pointerId); if (!c) return; owner.delete(e.pointerId); c.btn._ptr = performance.now(); release(c); };
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => kb.addEventListener(t, lift));
+    kb.addEventListener('contextmenu', e => e.preventDefault());
+    kb.addEventListener('touchstart', e => { if (root.classList.contains('is-full') && e.cancelable) e.preventDefault(); }, { passive: false });
+    // keyboard: arrows move, Enter/Space hold the key down until released
+    kb.addEventListener('keydown', e => {
+      const i = cells.findIndex(c => c.btn === document.activeElement); if (i < 0) return;
+      let t = null;
+      if (e.key === 'ArrowRight') t = cells[Math.min(cells.length - 1, i + 1)]; else if (e.key === 'ArrowLeft') t = cells[Math.max(0, i - 1)];
+      else if (e.key === 'Home') t = cells[0]; else if (e.key === 'End') t = cells[cells.length - 1];
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!e.repeat) { cells[i].btn._ptr = performance.now(); strike(cells[i]); } return; }
+      if (!t) return; e.preventDefault(); cells.forEach(c => { c.btn.tabIndex = -1; }); t.btn.tabIndex = 0; t.btn.focus();
+    });
+    kb.addEventListener('keyup', e => { if (e.key !== 'Enter' && e.key !== ' ') return; const c = cells.find(x => x.btn === document.activeElement); if (c) { e.preventDefault(); c.btn._ptr = performance.now(); release(c); } });
+
+    let back = null;
+    function setFull(on) {
+      root.classList.toggle('is-full', on); document.documentElement.classList.toggle('dk-locked', on);
+      full.setAttribute('aria-pressed', String(on)); full.querySelector('span').textContent = on ? T('יציאה ממסך מלא') : T('מסך מלא');
+      if (on) {
+        back = document.activeElement;
+        const fe = root.requestFullscreen || root.webkitRequestFullscreen;
+        if (fe) { try { const p = fe.call(root); const lock = () => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* no lock */ } }; if (p && p.then) p.then(lock, () => {}); else lock(); } catch (e) { /* not allowed */ } }
+        say(T('מסך מלא. Escape או הכפתור יוצאים.')); full.focus();
+      } else {
+        if (document.fullscreenElement || document.webkitFullscreenElement) { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) { /* ignore */ } }
+        try { screen.orientation.unlock(); } catch (e) { /* ignore */ }
+        if (back && back.focus) back.focus();
+      }
+    }
+    full.addEventListener('click', () => setFull(!root.classList.contains('is-full')));
+    document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && root.classList.contains('is-full')) setFull(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && root.classList.contains('is-full')) setFull(false); });
+
+    function prepare(changed) {
+      const name = snd;
+      if (changed) say(T('מכין צלילים…'));
+      loadSF(name).then(ok => {
+        if (!ok) { say(T('הצלילים לא נטענו. בדקו את החיבור ונסו שוב.')); return; }
+        const o = SF[name], ks = []; for (let m = lo; m < lo + N; m++) ks.push(nearestKey(o, m));
+        return Promise.all([...new Set(ks)].map(k => decodeKey(o, k))).then(() => { if (changed || !prepare.done) say(T('הקלידים מוכנים. נגנו!')); prepare.done = true; });
+      });
+    }
+    build();
+    return { prepare: () => prepare(!prepare.done), stop: () => { if (root.classList.contains('is-full')) setFull(false); [...voices.values()].forEach(v => fade(v, 0.05)); cells.forEach(c => c.btn.classList.remove('down')); } };
+  }
+  // the instruments tab: bass or keys
+  let instNow = 'bass';
+  try { if (localStorage.getItem('soniq-inst') === 'keys') instNow = 'keys'; } catch (e) { /* no storage */ }
+  function openInst() {
+    $('play-bass').hidden = instNow !== 'bass'; $('play-keys').hidden = instNow !== 'keys';
+    if (instNow === 'bass') { if (keysPlay) keysPlay.stop(); openBass(); } else { if (bassPlay) bassPlay.stop(); openKeys(); }
+  }
+  seg($('inst-pick'), [['bass', T('בס')], ['keys', T('קלידים')]], instNow, v => { instNow = v; try { localStorage.setItem('soniq-inst', v); } catch (e) { /* no storage */ } wake(); openInst(); });
   seg($('tools-tabs'), [['tuner', T('טיונר')], ['metro', T('מטרונום')], ['drums', T('תופים')], ['beats', T('ביטים')], ['inst', T('כלים')]], 'tuner', v => {
     $('tool-tuner').hidden = v !== 'tuner'; $('tool-metro').hidden = v !== 'metro'; $('tool-drums').hidden = v !== 'drums'; $('tool-beats').hidden = v !== 'beats'; $('tool-inst').hidden = v !== 'inst';
-    if (v !== 'inst' && bassPlay) bassPlay.stop();
-    if (v === 'inst') { wake(); openBass(); }
+    if (v !== 'inst') { if (bassPlay) bassPlay.stop(); if (keysPlay) keysPlay.stop(); }
+    if (v === 'inst') { wake(); openInst(); }
     // the kit and the pads play as music (iPhone silent switch), which would cut the tuner's microphone: listen only on the tuner tab
     if (v !== 'drums' && drums) drums.stop();
     if (v !== 'beats' && beats) beats.stop();
