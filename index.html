@@ -795,9 +795,6 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
 .tuner-more .toolbar { margin-top: var(--s3); }
 
 /* ---------- playable bass ---------- */
-/* note names on the playable neck and keys: natural notes clear, sharps faint so the eye isn't flooded */
-.neck-play .dot.acc { background: var(--note); color: var(--on-tonic); opacity: .22; transform: scale(.78); animation: none; }
-.piano-play .key.black .kname { opacity: .3; }
 
 #tool-inst { grid-column: 1 / -1; }
 .bp-scroll { overflow-x: auto; direction: ltr; padding-bottom: var(--s1); }
@@ -2375,7 +2372,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
   $('play-chord').addEventListener('click', () => playChord(mapMidis(), S.sound === 'piano' ? 'piano' : 'guitar'));
 
   /* ---------- chord shapes and scale positions on the guitar ---------- */
-  S.chordView = 'shapes'; S.scaleView = 'all'; S.shapeFam = SET.level === 'beginner' ? 'full' : 'sets'; S.shapeMode = 'chord'; S.shapeIdx = 0; S.posIdx = 0;
+  S.chordView = 'shapes'; S.scaleView = 'all'; S.shapeFam = 'full'; /* full chords first, triads one tap away */ S.shapeMode = 'chord'; S.shapeIdx = 0; S.posIdx = 0;
   let shapes = [], positions = [];
   const GTR = INST.guitar.tune;
   const INV = [T('מצב יסודי'), T('היפוך ראשון'), T('היפוך שני'), T('היפוך שלישי')];
@@ -2567,7 +2564,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     else if (S.cat === 'chord') {
       // one choice: a close voicing, a full chord, or every chord tone on the neck
       const four = closeDegs(currentDef()).length >= 4, cur = S.chordView === 'all' ? 'all' : S.shapeFam;
-      seg(host, [['sets', four ? T('צפוף') : T('משולשים')], ['full', T('אקורד מלא')], ['all', T('כל הצלילים')]], cur, v => {
+      seg(host, [['full', T('אקורד מלא')], ['sets', four ? T('צפוף') : T('משולשים')], ['all', T('כל הצלילים')]], cur, v => {
         if (v === 'all') S.chordView = 'all'; else { S.chordView = 'shapes'; if (S.shapeFam !== v) { S.shapeFam = v; S.shapeIdx = 0; computeShapes(); } }
         renderViewControls(); renderMap();
       });
@@ -5288,7 +5285,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     const say = t => { status.textContent = ''; setTimeout(() => { status.textContent = t; }, 40); };
 
     function paint() {
-      neck.paint(c => names ? { cls: BLACK.has(c.pc) ? 'acc' : 't', text: NAME_SHARP[c.pc] } : null);  // natural notes stand out, sharps stay faint
+      neck.paint(c => names && !BLACK.has(c.pc) ? { cls: 't', text: NAME_SHARP[c.pc] } : null);  // natural notes only: easier on the eye
       neck.cells.forEach(c => c.btn.setAttribute('aria-label', c.base + ', ' + disp(NAME_SHARP[c.pc])));
       nameBtn.setAttribute('aria-pressed', String(names)); muteBtn.setAttribute('aria-pressed', String(!ring));
     }
@@ -5409,7 +5406,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
         const b = h('button', { type: 'button', class: 'key ' + (black ? 'black' : 'white'), tabindex: '-1', style: `left:${left.toFixed(3)}%;width:${(black ? W * 0.68 : W).toFixed(3)}%` });
         const name = NAME_SHARP[m % 12], oct = Math.floor(m / 12) - 1;
         b.setAttribute('aria-label', T`קליד ${disp(name)}, אוקטבה ${oct}`);
-        if (names && (!black || true)) b.appendChild(h('span', { class: 'kname', 'aria-hidden': 'true', lang: 'en' }, disp(name) + (m % 12 === 0 ? oct : '')));
+        if (names && !black) b.appendChild(h('span', { class: 'kname', 'aria-hidden': 'true', lang: 'en' }, disp(name) + (m % 12 === 0 ? oct : '')));
         const c = { btn: b, midi: m, i: m - lo }; cells.push(c); kb.appendChild(b);
         b.addEventListener('click', () => { if (b._ptr && performance.now() - b._ptr < 700) return; strike(c); setTimeout(() => release(c), 600); });
       }
