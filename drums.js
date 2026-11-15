@@ -175,7 +175,10 @@
       b.setAttribute('aria-label', T(p.name) + ', ' + T('מקש') + ' ' + keyLabel(p.key));
       b.setAttribute('aria-keyshortcuts', keyLabel(p.key));
       const face = el('span', 'dk-face'); face.setAttribute('aria-hidden', 'true');
-      if (p.kind === 'kick') { const logo = el('span', 'dk-logo'); logo.textContent = 'SONIQ'; face.appendChild(logo); }
+      // drawn in layers: wrap, lugs, chrome hoop, coated head (cymbals: bronze and a bell)
+      if (p.kind === 'drum' || p.kind === 'kick') ['dk-shell', 'dk-lugs', 'dk-hoop', 'dk-head'].forEach(c => face.appendChild(el('span', c)));
+      if (p.kind === 'kick') { const badge = el('span', 'dk-badge'); badge.innerHTML = '<span class="dk-logo">Soniq</span><span class="dk-est">DRUM CO. · 2026</span>'; face.querySelector('.dk-head').appendChild(badge); }
+      if (p.id === 'snare') face.querySelector('.dk-head').appendChild(el('span', 'dk-wires'));
       if (p.bell) face.appendChild(el('span', 'dk-bell'));
       b.appendChild(face);
       const lab = el('span', 'dk-name'); lab.setAttribute('aria-hidden', 'true'); lab.textContent = T(p.name); b.appendChild(lab);
@@ -202,7 +205,20 @@
       if (announce) say(v < 0 ? T('המערכת הפוכה: הייהט מימין.') : T('המערכת רגילה: הייהט משמאל.'));
     }
     flip.addEventListener('click', () => setSide(-side, true));
-    bar.appendChild(full); bar.appendChild(flip); root.appendChild(bar); root.appendChild(tip); root.appendChild(status);
+    // the wrap of the shells: three vintage finishes, remembered on this device
+    const FIN = [['oyster', T('צדפה שחורה')], ['champagne', T('שמפניה מנצנצת')], ['marine', T('פנינה לבנה')]];
+    let fin = 'oyster'; try { const v = localStorage.getItem('soniq-drums-finish'); if (FIN.some(x => x[0] === v)) fin = v; } catch (e) { /* no storage */ }
+    const finBtn = el('button', 'dk-side'); finBtn.type = 'button';
+    finBtn.innerHTML = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><span></span>';
+    function setFin(v, announce) {
+      fin = v; stage.dataset.finish = v; const name = FIN.find(x => x[0] === v)[1];
+      finBtn.querySelector('span').textContent = T('גימור') + ': ' + name;
+      try { localStorage.setItem('soniq-drums-finish', v); } catch (e) { /* no storage */ }
+      if (announce) say(T('גימור') + ': ' + name);
+    }
+    finBtn.addEventListener('click', () => { const i = FIN.findIndex(x => x[0] === fin); setFin(FIN[(i + 1) % FIN.length][0], true); });
+    setFin(fin, false);
+    bar.appendChild(full); bar.appendChild(flip); bar.appendChild(finBtn); root.appendChild(bar); root.appendChild(tip); root.appendChild(status);
     host.appendChild(root);
 
     function place(b, p) { const x = side < 0 ? 100 - p.x : p.x; b.style.left = (x - p.d / 2) + '%'; }
