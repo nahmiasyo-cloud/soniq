@@ -536,7 +536,7 @@ details.more[open] > summary { margin-bottom: var(--s3); }
 
 /* fretboard */
 .neck { display: grid; grid-template-rows: repeat(var(--rows), var(--rh)) 22px; min-width: 700px; position: relative; }
-.neck.long { min-width: 820px; }
+.neck.long { min-width: 1040px; }
 .neck-guitar { --rh: 30px; } .neck-bass { --rh: 36px; } .neck-groots, .neck-broots { --rh: 44px; }
 .wood { border-left: 7px solid var(--text); border-radius: 0 4px 4px 0; background: var(--surface); }
 .inlay { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--rh) * 2); pointer-events: none; }
@@ -2057,10 +2057,10 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
   INST.groots = { he: T('גיטרה'), tune: [40, 45], thick: [3.2, 2.7], wound: [1, 1], kind: 'guitar', no: [6, 5] };
   INST.broots = { he: T('בס'), tune: [28, 33], thick: [4.6, 3.9], wound: [1, 1], kind: 'bass', no: [4, 3] };
   const FRETS = 12;
-  const MARKS = [3, 5, 7, 9, 12, 15];
-  const MAP_FRETS = 15; // the map shows 15 frets, so every scale position fits whole
+  const MARKS = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
+  const MAP_FRETS = 24; // the map shows the whole 24-fret neck, so every position fits whole and the second octave is there
   const BLACK = new Set([1, 3, 6, 8, 10]);
-  function colTemplate(L, F = FRETS) { const fr = []; for (let f = 1; f <= F; f++) fr.push(Math.pow(2, -f / 12).toFixed(3) + 'fr'); return L ? fr.reverse().join(' ') + ' 46px 28px' : '28px 46px ' + fr.join(' '); }
+  function colTemplate(L, F = FRETS) { const fr = []; for (let f = 1; f <= F; f++) fr.push(Math.pow(2, -f / (F > FRETS ? 24 : 12)).toFixed(3) + 'fr'); /* a long neck tapers half as fast, so the high frets stay wide enough to tap */ return L ? fr.reverse().join(' ') + ' 46px 28px' : '28px 46px ' + fr.join(' '); }
 
   function paintCells(cells, fn) {
     for (const c of cells) {
@@ -2088,7 +2088,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     neck.appendChild(h('div', { class: 'wood', 'aria-hidden': 'true', style: `grid-row:1 / span ${n};grid-column:${L ? '1 / ' + (F + 1) : '3 / -1'}` }));
     for (const f of MARKS.filter(m => m <= F)) {
       const inl = h('div', { class: 'inlay', 'aria-hidden': 'true', style: `grid-row:1 / span ${n};grid-column:${col(f)}` }, h('i'));
-      if (f === 12) inl.appendChild(h('i'));
+      if (f === 12 || f === 24) inl.appendChild(h('i'));
       neck.appendChild(inl);
     }
     const cells = [];
