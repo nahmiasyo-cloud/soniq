@@ -1,8 +1,9 @@
 /* SONIQ service worker: keeps the app working without internet.
-   The app's own files are saved at install. Sound samples and fonts from other sites are saved
-   the first time they load, so every sound you have played once also works offline.
+   The app's own files and fonts are saved at install. Every file comes from this site; the larger
+   instrument samples (sounds/fluidr3/) are saved the first time they load, so every sound you have
+   played once also works offline.
    Pages: network first (so updates arrive), then the saved copy. */
-const VERSION = 'soniq-v37';
+const VERSION = 'soniq-v38';
 const SHELL = VERSION + '-shell', RUNTIME = 'soniq-runtime';
 const PRECACHE = [
  "./",
@@ -52,7 +53,18 @@ const PRECACHE = [
  "sounds/drum-pad-mp3.js",
  "beats.js",
  "sounds/beats-hiphop-mp3.js",
- "sounds/beats-electro-mp3.js"
+ "sounds/beats-electro-mp3.js",
+ "fonts/fonts.css",
+ "fonts/outfit-500-700-latin.woff",
+ "fonts/outfit-500-700-latin-ext.woff",
+ "fonts/inter-400-600-latin.woff",
+ "fonts/inter-400-600-latin-ext.woff",
+ "fonts/inter-400-600-cyrillic.woff",
+ "fonts/IBMPlexSansHebrew-Regular.ttf",
+ "fonts/IBMPlexSansHebrew-SemiBold.ttf",
+ "fonts/IBMPlexSansArabic-Regular.ttf",
+ "fonts/IBMPlexSansArabic-SemiBold.ttf",
+ "fonts/IBMPlexMono-SemiBold.ttf"
 ];
 
 self.addEventListener('install', e => {
@@ -60,11 +72,13 @@ self.addEventListener('install', e => {
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.endsWith('-shell') && k !== SHELL).map(k => caches.delete(k))))
+    // up to v37 samples and fonts came from unpkg and Google Fonts: drop those saved copies
+    .then(() => caches.open(RUNTIME)).then(c => c.keys().then(reqs => Promise.all(reqs.filter(r => new URL(r.url).origin !== location.origin).map(r => c.delete(r)))))
     .then(() => self.clients.claim()));
 });
 
-// samples (versioned on unpkg) and font files never change: the saved copy is enough
-const IMMUTABLE = /^https:\/\/(unpkg\.com|fonts\.gstatic\.com)\//;
+// the FluidR3 samples never change: the saved copy is enough (kept across app versions)
+const IMMUTABLE = /\/sounds\/fluidr3\/[a-z0-9_]+-mp3\.js$/;
 
 self.addEventListener('fetch', e => {
   const req = e.request;
@@ -77,18 +91,18 @@ self.addEventListener('fetch', e => {
     }).catch(() => caches.match('index.html', { ignoreSearch: true }).then(r => r || caches.match('./'))));
     return;
   }
-  if (IMMUTABLE.test(req.url)) {
+  if (url.origin === location.origin && IMMUTABLE.test(url.pathname)) {
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
-      if (res.ok || res.type === 'opaque') { const copy = res.clone(); caches.open(RUNTIME).then(c => c.put(req, copy)); }
+      if (res.ok) { const copy = res.clone(); caches.open(RUNTIME).then(c => c.put(req, copy)); }
       return res;
     })));
     return;
   }
-  if (url.origin === location.origin || url.hostname === 'fonts.googleapis.com') {
-    // the app's own files and the font stylesheet: answer from the saved copy at once, refresh it in the background
+  if (url.origin === location.origin) {
+    // the app's own files: answer from the saved copy at once, refresh it in the background
     e.respondWith(caches.match(req).then(hit => {
       const net = fetch(req).then(res => {
-        if (res.ok) { const copy = res.clone(); caches.open(url.origin === location.origin ? SHELL : RUNTIME).then(c => c.put(req, copy)); }
+        if (res.ok) { const copy = res.clone(); caches.open(SHELL).then(c => c.put(req, copy)); }
         return res;
       }).catch(() => hit);
       return hit || net;
