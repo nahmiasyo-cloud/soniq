@@ -181,6 +181,10 @@
     const live = () => root.isConnected && (root.offsetParent !== null || root.classList.contains('is-full'));
     const pads = () => KITS[kit].pads;
     const padName = i => T(pads()[i][1]);
+    // each pad wears its family's colour, so kicks, snares, hats and the rest are found at a glance (the name stays the label)
+    const FAM = { kick: 'low', kick2: 'low', '808': 'low', bass: 'low', tom: 'low', snare: 'snap', snare2: 'snap', clap: 'snap', rim: 'snap', snap: 'snap',
+      chh: 'hat', ohh: 'hat', shaker: 'hat', tamb: 'hat', crash: 'hat', cymbal: 'hat' };
+    const famOf = i => FAM[pads()[i][0]] || 'fx';
 
     function graph() {
       ac = audio(); if (!ac) return null;
@@ -489,7 +493,7 @@
     function paintPads() {
       padBtn.forEach((b, i) => {
         const mine = !!userPcm[kit + ':' + i];
-        b.querySelector('.bt-name').textContent = padName(i);
+        b.querySelector('.bt-name').textContent = padName(i); b.dataset.fam = famOf(i);
         b.classList.toggle('sel', i === sel); b.classList.toggle('mine', mine);
         b.setAttribute('aria-label', padName(i) + (mine ? ', ' + T('הקלטה שלי') : '') + ', ' + T('מקש') + ' ' + keyLabel(KEYS[i]));
       });
@@ -514,7 +518,7 @@
       for (let s = 0; s < STEPS; s++) { const n = el('span', 'bt-num' + (s % 4 === 0 ? ' b' : ''), String(s + 1)); n.dataset.s = s; if (s === head) n.classList.add('now'); nums.appendChild(n); }
       seq.appendChild(nums);
       rows.forEach(i => {
-        const row = el('div', 'bt-row' + (i === sel ? ' sel' : '')); row.setAttribute('role', 'group'); row.setAttribute('aria-label', padName(i));
+        const row = el('div', 'bt-row' + (i === sel ? ' sel' : '')); row.dataset.fam = famOf(i); row.setAttribute('role', 'group'); row.setAttribute('aria-label', padName(i));
         const nm = el('span', 'bt-rowname', padName(i)); nm.setAttribute('aria-hidden', 'true'); row.appendChild(nm);
         for (let s = 0; s < STEPS; s++) {
           const c = el('button', 'bt-step' + (s % 4 === 0 ? ' b' : '')); c.type = 'button'; c.dataset.p = i; c.dataset.s = s;
