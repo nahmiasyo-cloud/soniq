@@ -1,4 +1,4 @@
-import asyncio, json, re, subprocess, sys, time
+import asyncio, json, os, re, subprocess, sys, time
 from playwright.async_api import async_playwright
 ROOT = sys.argv[1]
 srv = subprocess.Popen([sys.executable, '-m', 'http.server', '8765', '-d', ROOT], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -39,7 +39,8 @@ async def main():
                    await navigator.serviceWorker.ready; const ks = await caches.keys(); const c = await caches.open(ks.find(k => k.endsWith('-shell')));
                    const n = (await c.keys()).length; return ks.join(',') + ' shell entries=' + n; }""")
                 print('   sw:', sw)
-                if 'v38' not in sw: ok = False
+                ver = re.search(r"VERSION = '([^']+)'", open(os.path.join(ROOT, 'sw.js')).read()).group(1)
+                if ver not in sw: ok = False
             await ctx.close()
         await b.close()
     print('ALL OK' if ok else 'PROBLEMS')

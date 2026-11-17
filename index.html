@@ -3633,22 +3633,42 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     return AMP_CURVE;
   };
   const biq = (type, freq, q, gain) => { const n = AC.createBiquadFilter(); n.type = type; n.frequency.value = freq; if (q != null) n.Q.value = q; if (gain != null) n.gain.value = gain; return n; };
-  function ampChord(ms, t, dur, vol, dest) {
+  // one amp per guitar part, built once and kept: building a whole amp (11 filters and an oversampled clipper) for every
+  // chord overloaded phones in metal and rock, so the sound broke up like a tremolo. Each chord now only gets a gain
+  // envelope in front of the shared amp, and a new chord chokes the last one, as a real guitarist's hand does
+  const AMPS = {};
+  function ampFor(dest, part) {
+    const key = part || 'comp', a = AMPS[key];
+    if (a && a.dest === dest && a.ctx === AC) return a;
     const into = [biq('highpass', 150, 0.7), biq('peaking', 760, 0.8, 6), biq('lowpass', 4800, 0.6)];
     const pre = AC.createGain(); pre.gain.value = 5;
     const ws = AC.createWaveShaper(); ws.curve = ampCurve(); ws.oversample = '4x';
     const cab = [biq('highpass', 70, 0.7), biq('lowshelf', 130, null, 2), biq('peaking', 450, 1.1, -3.5), biq('peaking', 1800, 0.9, 3),
       biq('peaking', 3800, 2.2, -3), biq('lowpass', 5200, 0.9), biq('lowpass', 6800, 0.5)];
-    const out = AC.createGain();
-    out.gain.setValueAtTime(vol * 0.5, t); out.gain.setValueAtTime(vol * 0.5, t + dur); out.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.08);
+    const out = AC.createGain(); out.gain.value = 0;
     const chain = into.concat([pre, ws], cab, [out]); for (let i = 0; i < chain.length - 1; i++) chain[i].connect(chain[i + 1]); out.connect(dest);
+    return (AMPS[key] = { dest, ctx: AC, input: into[0], out, last: null });
+  }
+  function ampChord(ms, t, dur, vol, dest, part) {
+    const amp = ampFor(dest, part);
+    amp.out.gain.setTargetAtTime(vol * 0.5, Math.max(AC.currentTime, t - 0.004), 0.002);
+    // choke the chord before, so two never pile up in the amp
+    if (amp.last && amp.last.end > t) { const g = amp.last.g.gain; g.cancelScheduledValues(t); g.setValueAtTime(1, t); g.linearRampToValueAtTime(0, t + 0.012); }
+    const g = AC.createGain(), end = t + dur;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + 0.002);
+    // the release sits before the clipper, which holds a tail up, so it is shorter than the old 80 ms after the amp
+    g.gain.setValueAtTime(1, end); g.gain.exponentialRampToValueAtTime(0.0001, end + 0.035);
+    g.connect(amp.input); amp.last = { g, end: end + 0.035 };
     // a real guitar (direct input) into the amp when its samples are ready; the plucked-string model otherwise
     const di = SF.eguitar_di && SF.eguitar_di.state === 'ready' ? SF.eguitar_di : null;
+    let left = ms.length;
     ms.forEach((m, i) => {
       const src = AC.createBufferSource(), k = di ? nearestKey(di, m) : null, b = di ? di.bufs.get(k) : null;
-      if (b) { src.buffer = b; src.playbackRate.value = Math.pow(2, (m - k) / 12) * SET.a4 / 440; src.connect(into[0]); src.start(t + i * 0.008, b.lead || 0); }
-      else { if (di) decodeKey(di, k); src.buffer = pluckBuffer(m, 'eguitar'); src.connect(into[0]); src.start(t + i * 0.008); }
-      src.stop(t + dur + 0.1);
+      if (b) { src.buffer = b; src.playbackRate.value = Math.pow(2, (m - k) / 12) * SET.a4 / 440; src.connect(g); src.start(t + i * 0.008, b.lead || 0); }
+      else { if (di) decodeKey(di, k); src.buffer = pluckBuffer(m, 'eguitar'); src.connect(g); src.start(t + i * 0.008); }
+      src.stop(end + 0.1);
+      // let the browser free the chord once it ends (Safari keeps connected nodes alive)
+      src.onended = () => { src.disconnect(); if (--left === 0) g.disconnect(); };
     });
   }
   // through distortion a full triad turns to mud, so the amp plays what rock guitarists play: root, fifth and octave
@@ -4483,7 +4503,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
           if (st !== cpos) return;
           let vo = voicing(ch, c);
           if (c.arp) { const seq = c.order ? c.order.map(k => vo[k % vo.length]) : vo.concat(vo.length > 1 ? [vo[0] + 12] : []); vo = [seq[J.step % seq.length]]; }
-          if (c.amp && SET.rockGtr === 'amp') { ampChord(c.arp ? vo : powerOf(ch, vo), t, dur * beatLen, vol * 1.6, B.comp); return; }
+          if (c.amp && SET.rockGtr === 'amp') { ampChord(c.arp ? vo : powerOf(ch, vo), t, dur * beatLen, vol * 1.6, B.comp, part); return; }
           const out = c.spring ? springBus(B.comp) : B.comp;
           const hit = (tt, v) => vo.forEach((m, i) => { if (!sampleAt(c.sf, m, tt + (c.strum ? i * 0.012 : 0), v, dur * beatLen, out)) synthNote(m, 'piano', tt, v * 0.5); });
           const tc = t + (c.push || 0); hit(tc, vol); echo(c.echo, (te, g) => hit(te + (c.push || 0), vol * g));
