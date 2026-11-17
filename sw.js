@@ -64,6 +64,7 @@ const PRECACHE = [
  "fonts/IBMPlexSansHebrew-SemiBold.ttf",
  "fonts/IBMPlexSansArabic-Regular.ttf",
  "fonts/IBMPlexSansArabic-SemiBold.ttf",
+ "fonts/Lora-Italic-Variable.ttf",
  "fonts/IBMPlexMono-SemiBold.ttf"
 ];
 
