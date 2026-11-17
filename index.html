@@ -742,7 +742,10 @@ input[type="range"] { width: 100%; min-height: 28px; accent-color: var(--accent)
 /* the instruments' switches are touched while playing: full-size targets */
 #tool-inst .seg > button { min-height: 44px; }
 #inst-pick { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-#inst-pick > button { flex: 1 0 auto; padding-inline: 12px; }
+#inst-pick { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s2); overflow: visible; }
+#inst-pick > button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 68px; padding: var(--s2) 4px; border-radius: var(--r2, 14px); font-size: var(--fs-s, 14px); font-weight: 600; line-height: 1.15; text-align: center; }
+#inst-pick > button .ico { width: 26px; height: 26px; flex: none; opacity: .85; }
+#inst-pick > button[aria-pressed="true"] .ico { opacity: 1; }
 /* the tab already names the card, and the switch names each tool: headings stay for screen readers only */
 .vh-title, .bt-seqbox > .bt-h, .bt-sampler > .bt-h, .bt-looper > .bt-h { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 /* keyboard hints only where there is a keyboard and a mouse */
@@ -837,7 +840,17 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
 }
 
 /* ---------- playable keys ---------- */
-.kp-snd { margin-bottom: var(--s3); }
+.kp-snd { margin-bottom: var(--s3); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.kp-snd > button { padding-inline: 8px; }
+@container (max-width: 520px) { .kp-snd { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kp { container-type: inline-size; }
+.kp-oct { display: inline-flex; align-items: center; gap: 2px; padding: 0 2px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); }
+.kp-oct .kp-arrow { position: relative; width: 44px; padding: 0; justify-content: center; border: 0; background: none; }
+.kp-oct .kp-arrow:hover { background: var(--hover); }
+.kp-oct .kp-arrow span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.kp-oct-lbl { padding: 0 var(--s1); font-weight: 600; color: var(--muted); }
+.kp.is-full .kp-oct-lbl { display: none; }
+.kp.is-full .kp-snd { display: flex; }
 .kp-stage { padding: var(--s3); }
 .piano-play { height: 200px; min-width: 640px; touch-action: pan-x; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .piano-play .key { cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -870,7 +883,27 @@ body:not([data-view="jam"]):not(.jamming) .bar { display: none; }
 .gp-strings { display: flex; flex-direction: column; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .gp-str { position: relative; height: 44px; border: 0; padding: 0; margin: 0; background: linear-gradient(to bottom, transparent calc(50% - var(--th) / 2), #cfc6a8 calc(50% - var(--th) / 2), #cfc6a8 calc(50% + var(--th) / 2), transparent calc(50% + var(--th) / 2)); cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .gp-str.mute { opacity: .35; }
-.gp-str.hit { background: linear-gradient(to bottom, transparent calc(50% - var(--th) / 2 - 1px), var(--chordtone) calc(50% - var(--th) / 2 - 1px), var(--chordtone) calc(50% + var(--th) / 2 + 1px), transparent calc(50% + var(--th) / 2 + 1px)); }
+.gp-str.hit { background: linear-gradient(to bottom, transparent calc(50% - var(--th) / 2 - 1px), var(--chordtone) calc(50% - var(--th) / 2 - 1px), var(--chordtone) calc(50% + var(--th) / 2 + 1px), transparent calc(50% + var(--th) / 2 + 1px)); filter: drop-shadow(0 0 6px rgba(255, 92, 138, .75)); }
+/* the strum area looks like the guitar itself: a warm top, the sound hole and its rosette, and the strings over it */
+.gp-stage { position: relative; overflow: hidden; padding: var(--s3) var(--s3); background:
+  radial-gradient(circle min(21cqw, 96px) at 80% 50%, #120a10 0 78%, transparent 79%),
+  radial-gradient(circle min(21cqw, 96px) at 80% 50%, transparent 0 83%, #c79a4a 84% 87%, #3a2414 88% 91%, #c79a4a 92% 95%, transparent 96%),
+  repeating-linear-gradient(90deg, rgba(0, 0, 0, .05) 0 2px, transparent 2px 9px),
+  linear-gradient(180deg, #8a5a2b, #6b4220 55%, #4e2e15); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .5), inset 0 0 40px rgba(0, 0, 0, .45); }
+.gp-stage[data-snd="electric_guitar_clean"] { background:
+  radial-gradient(ellipse 9% 46% at 80% 50%, #1a1a1f 0 70%, #cfcfd6 72% 80%, transparent 82%),
+  radial-gradient(ellipse 120% 90% at 20% 0%, rgba(255, 255, 255, .12), transparent 60%),
+  linear-gradient(160deg, #a3175a, #6a0f3c 60%, #3d0822); }
+.gp-str { --sc: #e9e4da; background: linear-gradient(to bottom, transparent calc(50% - var(--th) / 2), var(--sc) calc(50% - var(--th) / 2), #8d877c calc(50% + var(--th) / 2), transparent calc(50% + var(--th) / 2)); }
+.gp-str[data-s="0"], .gp-str[data-s="1"], .gp-str[data-s="2"] { --sc: #e3c98f; }
+.gp-str.mute { opacity: .3; }
+@media (prefers-reduced-motion: no-preference) { .gp-str.hit { animation: gp-ring .26s ease-out; } @keyframes gp-ring { 0% { transform: translateY(1.5px); } 25% { transform: translateY(-1.5px); } 50% { transform: translateY(1px); } 75% { transform: translateY(-.5px); } } }
+/* the chord that sounds now, large, above the guitar (screen readers hear it through the status line) */
+.gp-now { display: flex; align-items: baseline; gap: var(--s3); margin: 0 0 var(--s2); }
+.gp-now b { font: 800 clamp(34px, 9cqw, 48px)/1 var(--font-display); color: var(--chordtone); letter-spacing: -.01em; }
+.gp-now span { font: 600 var(--fs-s, 14px)/1.2 var(--font-mono); color: var(--muted); }
+.gp { container-type: inline-size; }
+.gp-chord.tonic:not(.on) b { color: var(--tonic); }
 .gp-str:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
 @media (max-width: 520px) { .gp-chords { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 /* ---------- drum kit (drums.js) ---------- */
@@ -999,6 +1032,15 @@ html.dk-locked, html.dk-locked body { overflow: hidden; }
 .bt-mine .ico { width: 16px; height: 16px; display: block; }
 .bt-pad.mine .bt-mine { display: block; }
 /* a hit: magenta, the "sounding now" colour */
+/* sound families: a coloured lip on each pad and on its sequencer row (the name is still the label, colour only helps) */
+.bt-pad, .bt-row { --fam: #C4A8FF; }
+.bt-pad[data-fam="low"], .bt-row[data-fam="low"] { --fam: #FF8A3D; }
+.bt-pad[data-fam="snap"], .bt-row[data-fam="snap"] { --fam: #F4B433; }
+.bt-pad[data-fam="hat"], .bt-row[data-fam="hat"] { --fam: #2EC4BC; }
+.bt-pad { background: linear-gradient(160deg, color-mix(in srgb, var(--fam) 16%, #3d2a4b), #2a1b35 60%, #20152a); }
+.bt-pad::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px; background: var(--fam); opacity: .85; pointer-events: none; }
+.bt-led { background: color-mix(in srgb, var(--fam) 35%, #2a1b35); }
+.bt-pad:active:not(.hit) { transform: translateY(2px); box-shadow: inset 0 0 0 1px rgba(246, 231, 212, .14), 0 1px 0 #0b0711; }
 .bt-pad.hit { background: linear-gradient(160deg, #6a2f5a, #45203f); box-shadow: inset 0 0 0 3px var(--chordtone), 0 0 18px rgba(255, 92, 138, .5), 0 3px 0 #0b0711; }
 .bt-pad.hit .bt-led { background: var(--chordtone); box-shadow: 0 0 8px var(--chordtone); }
 @media (prefers-reduced-motion: no-preference) { .bt-pad.hit { transform: translateY(2px) scale(.98); } }
@@ -1091,6 +1133,10 @@ html.dk-locked, html.dk-locked body { overflow: hidden; }
 .bt-step[aria-pressed="true"] { background: var(--accent); box-shadow: none; }
 .bt-step[aria-pressed="true"]::after { content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--on-accent); }
 .bt-step.now { box-shadow: inset 0 0 0 2px var(--chordtone); }
+.bt-row .bt-rowname { box-shadow: inset 3px 0 0 var(--fam); }
+.bt-row.sel .bt-rowname { color: var(--text); box-shadow: inset 6px 0 0 var(--fam); }
+.bt-row .bt-step[aria-pressed="true"]:not(.now) { background: var(--fam); }
+.bt-row .bt-step[aria-pressed="true"]::after { background: #140b18; }
 .bt-step.now[aria-pressed="true"] { background: var(--chordtone); }
 .bt-status { margin-top: var(--s3); min-height: 1.5em; }
 @container (min-width: 760px) {
@@ -5753,7 +5799,10 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     const up = btn('dk-side', '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>', T('אוקטבה למעלה'));
     const nameBtn = btn('dk-side', '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 19V5l7 9 7-9v14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>', T('שמות התווים'));
     const sndSeg = h('div', { class: 'seg kp-snd', role: 'group', 'aria-label': T('צליל') });
-    const bar = h('div', { class: 'dk-bar' }, full, down, up, nameBtn);
+    // the two octave arrows sit together around the word, as one control
+    down.classList.add('kp-arrow'); up.classList.add('kp-arrow');
+    const oct = h('div', { class: 'kp-oct', dir: 'ltr', role: 'group', 'aria-label': T('אוקטבה') }, down, h('span', { class: 'kp-oct-lbl', 'aria-hidden': 'true' }, T('אוקטבה')), up);
+    const bar = h('div', { class: 'dk-bar' }, full, oct, nameBtn);
     const root = h('div', { class: 'bp kp' }, sndSeg, h('div', { class: 'bp-scroll' }, stage), bar, h('p', { class: 'desc dk-tip kbd-only' }, T('במקלדת: חצים לבחירת קליד, Enter או רווח לנגינה.')), status);
     host.textContent = ''; host.appendChild(root);
     let cells = [];
@@ -5882,7 +5931,9 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     const chordsEl = h('div', { class: 'gp-chords', role: 'group', 'aria-label': T('האקורדים בסולם') });
     const strings = h('div', { class: 'gp-strings', dir: 'ltr', role: 'group', 'aria-label': T('מיתרים לפריטה') });
     const strBtns = OPEN.map((m, i) => { const b = h('button', { type: 'button', class: 'gp-str', style: `--th:${(3.2 - i * 0.42).toFixed(2)}px`, 'data-s': String(i) }); strings.prepend(b); return b; });
-    const root_ = h('div', { class: 'gp' }, keyRow, chordsEl, h('div', { class: 'bp-stage gp-stage' }, strings), h('p', { class: 'desc dk-tip kbd-only' }, T('במקלדת: מקשים 1 עד 7 פורטים את האקורדים, ובמיתר שבפוקוס Enter פורט אותו לבד.')), status);
+    const nowEl = h('p', { class: 'gp-now', 'aria-hidden': 'true' }, h('b', { lang: 'en', dir: 'ltr' }), h('span', { lang: 'en', dir: 'ltr' }));
+    const stage = h('div', { class: 'bp-stage gp-stage', 'data-snd': snd }, strings);
+    const root_ = h('div', { class: 'gp' }, keyRow, chordsEl, nowEl, stage, h('p', { class: 'desc dk-tip kbd-only' }, T('במקלדת: מקשים 1 עד 7 פורטים את האקורדים, ובמיתר שבפוקוס Enter פורט אותו לבד.')), status);
     host.textContent = ''; host.appendChild(root_);
 
     function chords() {
@@ -5904,7 +5955,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     function render() {
       list = chords(); chordsEl.textContent = ''; btns = [];
       list.forEach((ch, d) => {
-        const b = h('button', { type: 'button', class: 'gp-chord' + (d === cur ? ' on' : ''), 'aria-pressed': String(d === cur), 'aria-keyshortcuts': String(d + 1) },
+        const b = h('button', { type: 'button', class: 'gp-chord' + (d === cur ? ' on' : '') + (d === 0 ? ' tonic' : ''), 'aria-pressed': String(d === cur), 'aria-keyshortcuts': String(d + 1) },
           h('b', { lang: 'en', dir: 'ltr' }, ch.roman), h('span', { lang: 'en', dir: 'ltr' }, ch.name));
         b.setAttribute('aria-label', T`אקורד ${ch.name}, דרגה ${ch.roman}`);
         b.addEventListener('pointerdown', e => { if (e.button > 0) return; b._ptr = performance.now(); pick(d, true); });
@@ -5915,6 +5966,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     }
     function labelStrings() {
       const v = voicing(list[cur]);
+      nowEl.firstChild.textContent = list[cur].name; nowEl.lastChild.textContent = list[cur].roman;
       strBtns.forEach((b, i) => { const n = v[i]; b.classList.toggle('mute', n === null); b.setAttribute('aria-label', T`מיתר ${6 - i}` + ', ' + (n === null ? T('מושתק') : disp(NAME_SHARP[n % 12]))); });
     }
     function pick(d, strumIt) {
@@ -5922,7 +5974,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
       labelStrings(); if (strumIt) strum(1);
     }
     mode.append(...[[false, T("מז'ור")], [true, T('מינור')]].map(([v, t]) => { const b = h('button', { type: 'button', 'aria-pressed': String(v === minor) }, t); b.addEventListener('click', () => { minor = v; [...mode.children].forEach(x => x.setAttribute('aria-pressed', String(x === b))); save(); render(); say(T`סולם ${disp(NAME_SHARP[root])} ${minor ? T('מינור') : T("מז'ור")}`); }); return b; }));
-    sndSeg.append(...SNDS.map(([v, t]) => { const b = h('button', { type: 'button', 'aria-pressed': String(v === snd) }, t); b.addEventListener('click', () => { snd = v; [...sndSeg.children].forEach(x => x.setAttribute('aria-pressed', String(x === b))); save(); prepare(true); }); return b; }));
+    sndSeg.append(...SNDS.map(([v, t]) => { const b = h('button', { type: 'button', 'aria-pressed': String(v === snd) }, t); b.addEventListener('click', () => { snd = v; stage.dataset.snd = v; [...sndSeg.children].forEach(x => x.setAttribute('aria-pressed', String(x === b))); save(); prepare(true); }); return b; }));
     sel.addEventListener('change', () => { root = +sel.value; save(); render(); say(T`סולם ${disp(NAME_SHARP[root])} ${minor ? T('מינור') : T("מז'ור")}`); });
 
     const ring = [null, null, null, null, null, null];
@@ -5986,6 +6038,15 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     ({ drums: openDrums, beats: openBeats, bass: openBass, keys: openKeys, gtr: openGtr })[instNow]();
   }
   seg($('inst-pick'), INSTS, instNow, v => { instNow = v; try { localStorage.setItem('soniq-inst', v); } catch (e) { /* no storage */ } wake(); if (TU.mic) stopMic(); openInst(); });
+  // a picture for each instrument, so the row reads like a set of instruments and not a list of words
+  const INST_ICO = {
+    drums: '<ellipse cx="12" cy="9" rx="8" ry="3"/><path d="M4 9v7c0 1.7 3.6 3 8 3s8-1.3 8-3V9M4 12.5l4 1.6M20 12.5l-4 1.6M9 3l3 4M15 3l-3 4"/>',
+    beats: '<rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5" fill="currentColor"/>',
+    bass: '<path d="M14.5 9.5l5-5M18 3l3 3M10.6 9.8c-1.3-1.6-4.1-1.6-5.7.4-1.4 1.8-.9 3.4-2.1 4.6-1.4 1.4.5 5.3 3.7 5.3 1.6 0 2.4-1.4 3.6-2.1 1.5-.9 3.5-.6 4.4-2.4.9-1.8-.2-3.5-1.7-4.3"/><path d="M8 16l6.5-6.5"/>',
+    keys: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 19v-5M12 19v-5M16 19v-5"/><rect x="6.6" y="5" width="2.6" height="9" fill="currentColor"/><rect x="14.8" y="5" width="2.6" height="9" fill="currentColor"/>',
+    gtr: '<path d="M13.5 10.5l6-6M18 3l3 3"/><path d="M11 9.5c-1.6-1.4-4.4-1.2-5.6.9-.8 1.4-.3 2.4-1.6 3.3-2 1.5-.4 5.9 3.5 5.9 1.9 0 2.8-1.2 3.8-2 1.3-1 3.3-.9 4-2.6.6-1.5-.3-3-1.6-3.6"/><circle cx="9.6" cy="14.4" r="1.6"/>'
+  };
+  $('inst-pick').querySelectorAll('button[data-v]').forEach(b => { const ic = INST_ICO[b.dataset.v]; if (ic) b.insertAdjacentHTML('afterbegin', '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + ic + '</svg>'); });
   seg($('tools-tabs'), [['tuner', T('טיונר')], ['metro', T('מטרונום')], ['inst', T('כלים')]], 'tuner', v => {
     $('tool-tuner').hidden = v !== 'tuner'; $('tool-metro').hidden = v !== 'metro'; $('tool-inst').hidden = v !== 'inst';
     if (v !== 'inst') stopInst();
