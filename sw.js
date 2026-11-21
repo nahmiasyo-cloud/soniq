@@ -3,7 +3,7 @@
    instrument samples (sounds/fluidr3/) are saved the first time they load, so every sound you have
    played once also works offline.
    Pages: network first (so updates arrive), then the saved copy. */
-const VERSION = 'soniq-v39';
+const VERSION = 'soniq-v40';
 const SHELL = VERSION + '-shell', RUNTIME = 'soniq-runtime';
 const PRECACHE = [
  "./",
@@ -60,12 +60,11 @@ const PRECACHE = [
  "fonts/inter-400-600-latin.woff",
  "fonts/inter-400-600-latin-ext.woff",
  "fonts/inter-400-600-cyrillic.woff",
- "fonts/IBMPlexSansHebrew-Regular.ttf",
- "fonts/IBMPlexSansHebrew-SemiBold.ttf",
- "fonts/IBMPlexSansArabic-Regular.ttf",
- "fonts/IBMPlexSansArabic-SemiBold.ttf",
+ "fonts/heebo-400-700-hebrew.woff",
+ "fonts/noto-sans-arabic-400-700-arabic.woff",
  "fonts/Lora-Italic-Variable.ttf",
- "fonts/IBMPlexMono-SemiBold.ttf"
+ "fonts/IBMPlexMono-SemiBold.ttf",
+ "fonts/soniq-accidentals-400-700-music.woff"
 ];
 
 self.addEventListener('install', e => {
