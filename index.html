@@ -71,10 +71,10 @@
   --bad: #FF7A6B;
   --open-str: #6E5A86;
   /* type */
-  --font-music: "Lora", Georgia, "Times New Roman", serif;   /* roman numerals and chord names: a lead-sheet italic */
-  --font-display: "Outfit", "Inter", "IBM Plex Sans Hebrew", "IBM Plex Sans Arabic", system-ui, sans-serif;
-  --font-body: "Inter", "IBM Plex Sans Hebrew", "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --font-music: "SONIQ Accidentals", "Lora", Georgia, "Times New Roman", serif;   /* roman numerals and chord names: a lead-sheet italic */
+  --font-display: "SONIQ Accidentals", "Outfit", "Inter", "IBM Plex Sans Hebrew", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-body: "SONIQ Accidentals", "Inter", "IBM Plex Sans Hebrew", "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "SONIQ Accidentals", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --fs-xl: 40px; --fs-l: 28px; --fs-m: 20px; --fs-b: 16px; --fs-s: 14px; --fs-xs: 12px;
   /* space, radius, motion */
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
@@ -83,6 +83,10 @@
   --sidebar: 232px; --bar: 76px; --nav: 0px;
   color-scheme: dark;
 }
+/* Headings in he/ar/ru: Outfit has no Hebrew, Arabic or Cyrillic, so use the script's own font instead of a mixed fallback. */
+:root:lang(he) { --font-display: "SONIQ Accidentals", "IBM Plex Sans Hebrew", "Inter", system-ui, sans-serif; }
+:root:lang(ar) { --font-display: "SONIQ Accidentals", "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif; }
+:root:lang(ru) { --font-display: "SONIQ Accidentals", "Inter", system-ui, sans-serif; }
 html { scroll-padding-bottom: calc(var(--bar) + var(--nav) + 24px); }
 html { background: var(--bg); }
 body { background: var(--bg); color: var(--text); font: 400 var(--fs-b)/1.5 var(--font-body); }

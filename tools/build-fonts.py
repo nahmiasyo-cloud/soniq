@@ -43,6 +43,10 @@ FONTS = [
     ('IBM Plex Sans Arabic', 'ibmplexsansarabic/IBMPlexSansArabic-Regular.ttf', '400', None, {'arabic': ARABIC}),
     ('IBM Plex Sans Arabic', 'ibmplexsansarabic/IBMPlexSansArabic-SemiBold.ttf', '600', None, {'arabic': ARABIC}),
     ('IBM Plex Mono', 'ibmplexmono/IBMPlexMono-SemiBold.ttf', '600', None, {'latin': LATIN, 'latin-ext': LATIN_EXT, 'cyrillic': CYRILLIC}),
+    # Flat, natural, sharp: none of the fonts above has them, so they came from whatever the device had.
+    # Noto Sans Symbols (OFL, no Reserved Font Name) cut to just these three; listed first in every --font-* stack.
+    # After a rebuild, add back the ascent/descent/line-gap/size-adjust overrides by hand (see fonts.css).
+    ('SONIQ Accidentals', 'notosanssymbols/NotoSansSymbols[wght].ttf', '400 700', {'wght': (400, 700)}, {'music': 'U+266D-266F'}),
 ]
 
 css = ['/* SONIQ fonts, served from this site (no request to Google). SIL Open Font License 1.1: see fonts/licenses/.\n   Built by tools/build-fonts.py from github.com/google/fonts. */']

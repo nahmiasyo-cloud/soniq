@@ -23,4 +23,11 @@
 /* Lora Italic: the roman numerals and chord names in the guitar. Lora has the Reserved Font Name "Lora", so, like Plex,
    the file is shipped byte for byte, unmodified (OFL 1.1); unicode-range only decides when a browser downloads it. */
 @font-face { font-family: 'Lora'; font-style: italic; font-weight: 400 700; font-display: swap;
-  src: url('Lora-Italic-Variable.ttf') format('truetype'); unicode-range: U+0000-00FF,U+00B0,U+2020-206F,U+266D-266F; }
+  src: url('Lora-Italic-Variable.ttf') format('truetype'); unicode-range: U+0000-00FF,U+00B0,U+2020-206F; }
+/* Flat, natural, sharp (U+266D-266F): no other font here has them. Noto Sans Symbols (OFL, no Reserved Font Name), cut to these 3 and 400-700. The metric overrides keep them from making lines taller. */
+@font-face { font-family: 'SONIQ Accidentals'; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url('soniq-accidentals-400-700-music.woff') format('woff'); unicode-range: U+266D-266F;
+  ascent-override: 75%; descent-override: 20%; line-gap-override: 0%; size-adjust: 105%; }
+@font-face { font-family: 'SONIQ Accidentals'; font-style: italic; font-weight: 400 700; font-display: swap;
+  src: url('soniq-accidentals-400-700-music.woff') format('woff'); unicode-range: U+266D-266F;
+  ascent-override: 75%; descent-override: 20%; line-gap-override: 0%; size-adjust: 105%; }
