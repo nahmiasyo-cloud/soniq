@@ -60,10 +60,8 @@ const PRECACHE = [
  "fonts/inter-400-600-latin.woff",
  "fonts/inter-400-600-latin-ext.woff",
  "fonts/inter-400-600-cyrillic.woff",
- "fonts/IBMPlexSansHebrew-Regular.ttf",
- "fonts/IBMPlexSansHebrew-SemiBold.ttf",
- "fonts/IBMPlexSansArabic-Regular.ttf",
- "fonts/IBMPlexSansArabic-SemiBold.ttf",
+ "fonts/heebo-400-700-hebrew.woff",
+ "fonts/noto-sans-arabic-400-700-arabic.woff",
  "fonts/Lora-Italic-Variable.ttf",
  "fonts/IBMPlexMono-SemiBold.ttf",
  "fonts/soniq-accidentals-400-700-music.woff"

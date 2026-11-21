@@ -38,10 +38,9 @@ def codepoints(ranges):
 FONTS = [
     ('Outfit', 'outfit/Outfit[wght].ttf', '500 700', {'wght': (500, 700)}, {'latin': LATIN, 'latin-ext': LATIN_EXT}),
     ('Inter', 'inter/Inter[opsz,wght].ttf', '400 600', {'opsz': 14, 'wght': (400, 600)}, {'latin': LATIN, 'latin-ext': LATIN_EXT, 'cyrillic': CYRILLIC}),
-    ('IBM Plex Sans Hebrew', 'ibmplexsanshebrew/IBMPlexSansHebrew-Regular.ttf', '400', None, {'hebrew': HEBREW}),
-    ('IBM Plex Sans Hebrew', 'ibmplexsanshebrew/IBMPlexSansHebrew-SemiBold.ttf', '600', None, {'hebrew': HEBREW}),
-    ('IBM Plex Sans Arabic', 'ibmplexsansarabic/IBMPlexSansArabic-Regular.ttf', '400', None, {'arabic': ARABIC}),
-    ('IBM Plex Sans Arabic', 'ibmplexsansarabic/IBMPlexSansArabic-SemiBold.ttf', '600', None, {'arabic': ARABIC}),
+    # Hebrew and Arabic: variable 400-700, no Reserved Font Name, so they can be cut (replaced IBM Plex in v40, about 560 KB less).
+    ('Heebo', 'heebo/Heebo[wght].ttf', '400 700', {'wght': (400, 700)}, {'hebrew': HEBREW}),
+    ('Noto Sans Arabic', 'notosansarabic/NotoSansArabic[wdth,wght].ttf', '400 700', {'wght': (400, 700), 'wdth': 100}, {'arabic': ARABIC}),
     ('IBM Plex Mono', 'ibmplexmono/IBMPlexMono-SemiBold.ttf', '600', None, {'latin': LATIN, 'latin-ext': LATIN_EXT, 'cyrillic': CYRILLIC}),
     # Flat, natural, sharp: none of the fonts above has them, so they came from whatever the device had.
     # Noto Sans Symbols (OFL, no Reserved Font Name) cut to just these three; listed first in every --font-* stack.
