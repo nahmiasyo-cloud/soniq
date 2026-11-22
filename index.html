@@ -2175,10 +2175,28 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     wake();
   }
   ['touchend', 'click', 'keydown'].forEach(t => document.addEventListener(t, playThrough, { capture: true, passive: true }));
+  /* playing on with the screen locked: while the jam or the metronome plays, the silent clip keeps running in the
+     background (iOS keeps a playing media page alive, and since iOS 17.5 its Web Audio too, with the playback session),
+     and the lock screen shows SONIQ with play and pause. */
+  const keepAlive = new Map();  // what is playing -> its stop/start
+  function bgPlay(id, on, title, toggle) {
+    if (on) keepAlive.set(id, toggle); else keepAlive.delete(id);
+    const ms = navigator.mediaSession; if (!ms) return;
+    try {
+      if (keepAlive.size) {
+        if (on && window.MediaMetadata) ms.metadata = new MediaMetadata({ title, artist: 'SONIQ', artwork: [{ src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] });
+        ms.playbackState = 'playing';
+      } else { ms.playbackState = 'paused'; }
+      const any = () => [...keepAlive.values()].pop() || toggle;
+      ms.setActionHandler('play', () => { toggle(true); playThrough(); });
+      ms.setActionHandler('pause', () => { any()(false); });
+      try { ms.setActionHandler('stop', () => { any()(false); }); } catch (e) { /* not on every browser */ }
+    } catch (e) { /* no media session */ }
+  }
   // back from the lock screen, a call or another app: pause the silence while away, and on return give a stuck
   // context a short suspend and resume (iOS can leave it "interrupted" until then)
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { if (silentLoop) silentLoop.pause(); return; }
+    if (document.hidden) { if (silentLoop && !keepAlive.size) silentLoop.pause(); return; }
     if (AC && AC.state !== 'running') setTimeout(() => { try { const p = AC.state === 'interrupted' ? AC.suspend().then(() => AC.resume()) : AC.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* needs a touch */ } }, 300);
   });
   const mtof = m => SET.a4 * Math.pow(2, (m - 69) / 12);
@@ -5044,7 +5062,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     if (!J.playing) return;
     // with the screen locked or another app in front the browser wakes us about once a second, so plan further ahead;
     // and after a longer sleep skip the missed steps instead of firing them all at once
-    const s = styleOf(), horizon = AC.currentTime + (document.hidden ? 1.6 : 0.15);
+    const s = styleOf(), horizon = AC.currentTime + (document.hidden ? 2.5 : 0.15);
     tickDrone(horizon + 0.5);
     if (s.steps) {
       while (J.next < AC.currentTime - 0.03) { J.next += stepTime(s); J.step++; if (J.step >= s.steps) { J.step = 0; J.bar++; } }
@@ -5253,6 +5271,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
   }
   function setPlaying(on) {
     J.playing = on; document.body.classList.toggle('jamming', on); playBtn.setAttribute('aria-pressed', String(on));
+    bgPlay('jam', on, T('אלתור'), setPlaying);
     playBtn.setAttribute('aria-label', on ? T('עצירת האלתור') : T('הפעלת האלתור')); $('pb-icon').setAttribute('d', on ? ICON_STOP : ICON_PLAY);
     if (on) { wake(); busses(); restart(); }
     else {
@@ -6252,7 +6271,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
   }
   function mTick() {
     if (!M.playing) return;
-    const groups = mGroups(), horizon = AC.currentTime + (document.hidden ? 1.6 : 0.12);
+    const groups = mGroups(), horizon = AC.currentTime + (document.hidden ? 2.5 : 0.12);
     const advance = () => {
       const subCount = eighthMeter() ? groups[M.beat] : M.sub;
       M.next += eighthMeter() ? 60 / M.bpm : 60 / M.bpm / M.sub; M.subIdx++;
@@ -6313,6 +6332,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
   }
   function metroPlay(on) {
     M.playing = on; const b = $('metro-play'); b.setAttribute('aria-pressed', String(on));
+    bgPlay('metro', on, T('מטרונום'), metroPlay);
     b.setAttribute('aria-label', on ? T('עצירת המטרונום') : T('הפעלת המטרונום')); $('metro-icon').setAttribute('d', on ? ICON_STOP : ICON_PLAY);
     if (on) { wake(); busses(); M.beat = 0; M.subIdx = 0; M.queue = []; M.next = AC.currentTime + 0.06; mTick(); requestAnimationFrame(mDraw); }
     else { clearTimeout(M.timer); $('metro-beats').querySelectorAll('.beat-dot').forEach(d => d.classList.remove('now')); }
