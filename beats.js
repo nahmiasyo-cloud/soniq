@@ -148,6 +148,9 @@
     const F = (k, ...v) => T(k).replace(/\{(\d)\}/g, (_, n) => v[n]);
     const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     let kit = 'hiphop', sel = 0, bpm = 90, swing = 0;
+    // below the Professional level the machine starts small: 8 pads (drums, 808, clap, rim, snap); one button shows all 16
+    const compact = !!opt.compact;
+    let allPads = !compact; try { if (compact && localStorage.getItem('soniq-beats-all') === '1') allPads = true; } catch (e) { /* no storage */ }
     let pat = Array.from({ length: 16 }, () => new Array(STEPS).fill(0));
     // a first beat to press play on: kick, snare and hats
     [[0, [0, 7, 10]], [1, [4, 12]], [2, [0, 2, 4, 6, 8, 10, 12, 14]]].forEach(([p, ss]) => ss.forEach(s => { pat[p][s] = 1; }));
@@ -379,17 +382,26 @@
     const padBtn = [];
     // top row first, so the screen reads like the pads look
     [12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3].forEach(i => {
-      const b = el('button', 'bt-pad'); b.type = 'button'; b.dataset.pad = i; b.setAttribute('aria-keyshortcuts', keyLabel(KEYS[i]));
+      const b = el('button', i >= 8 ? 'bt-pad bt-extra' : 'bt-pad'); b.type = 'button'; b.dataset.pad = i; b.setAttribute('aria-keyshortcuts', keyLabel(KEYS[i]));
       const led = el('span', 'bt-led'), nm = el('span', 'bt-name'), kb = el('span', 'bt-key', keyLabel(KEYS[i])), mine = el('span', 'bt-mine');
       mine.innerHTML = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + ICON.mic + '</svg>';
       [led, nm, kb, mine].forEach(x => { x.setAttribute('aria-hidden', 'true'); b.appendChild(x); });
       grid.appendChild(b); padBtn[i] = b;
     });
 
+    const moreB = el('button', 'btn-quiet bt-more'); moreB.type = 'button'; moreB.hidden = !compact;
+    function paintMore() {
+      root.classList.toggle('few', !allPads); moreB.setAttribute('aria-expanded', String(allPads));
+      moreB.textContent = allPads ? T('פחות פדים') : T('עוד 8 פדים');
+    }
+    moreB.addEventListener('click', () => {
+      allPads = !allPads; try { localStorage.setItem('soniq-beats-all', allPads ? '1' : '0'); } catch (e) { /* no storage */ }
+      paintMore(); say(allPads ? T('כל 16 הפדים מוצגים') : T('מוצגים 8 פדים'));
+    });
     const ctl = el('div', 'bt-ctl');
     const trans = el('div', 'bt-transport'); trans.setAttribute('role', 'group'); trans.setAttribute('aria-label', T('נגינה והקלטה'));
     const playB = btn('bt-btn bt-play', T('נגן'), ICON.play);
-    const recB = btn('bt-btn bt-rec', T('הקלטה חיה'), ICON.rec); recB.setAttribute('aria-pressed', 'false');
+    const recB = btn('bt-btn bt-rec lvl-adv', T('הקלטה חיה'), ICON.rec); recB.setAttribute('aria-pressed', 'false');
     const clearB = btn('bt-btn bt-clear', T('ניקוי התבנית'), ICON.clear);
     trans.appendChild(playB); trans.appendChild(recB); trans.appendChild(clearB);
     let uid = 0;
@@ -424,7 +436,7 @@
     const smp = el('div', 'bt-sampler'); smp.setAttribute('role', 'group');
     const smpH = el('h4', 'bt-h', T('הקלטה עצמית')); smpH.id = 'bt-smp-h' + Math.random().toString(36).slice(2, 7); smp.setAttribute('aria-labelledby', smpH.id);
     const smpTip = el('p', 'desc bt-tip', T('בחרו פד והקליטו עליו צליל של עד 3 שניות.'));
-    const smpSel = el('p', 'bt-sel');
+    const smpSel = el('p', 'bt-sel sr-only');
     const micB = btn('bt-btn bt-mic', T('הקלטה לפד'), ICON.mic);
     const restB = btn('bt-btn bt-restore', T('שחזור הצליל המקורי'), ICON.back);
     const meter = el('span', 'bt-meter'); meter.setAttribute('aria-hidden', 'true'); meter.appendChild(el('span'));
@@ -481,8 +493,9 @@
       [...views.children].forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
     }
     VIEWS.forEach(([k, t]) => { const b = el('button', '', t); b.type = 'button'; b.dataset.v = k; b.addEventListener('click', () => setView(k)); views.appendChild(b); });
-    body.appendChild(grid); body.appendChild(ctl); body.appendChild(views); body.appendChild(seqBox); body.appendChild(loopBox); body.appendChild(smp);
-    setView(view);
+    const padBox = el('div', 'bt-padbox'); padBox.appendChild(grid); padBox.appendChild(moreB);
+    body.appendChild(padBox); body.appendChild(ctl); body.appendChild(views); body.appendChild(seqBox); body.appendChild(loopBox); body.appendChild(smp);
+    setView(view); paintMore();
     root.appendChild(bar); root.appendChild(body); root.appendChild(status); host.appendChild(root);
 
     function say(t) { status.textContent = ''; setTimeout(() => { status.textContent = t; }, 40); }
@@ -498,7 +511,8 @@
         b.setAttribute('aria-label', padName(i) + (mine ? ', ' + T('הקלטה שלי') : '') + ', ' + T('מקש') + ' ' + keyLabel(KEYS[i]));
       });
       smpSel.textContent = T('הפד הנבחר:') + ' ' + padName(sel) + (userPcm[kit + ':' + sel] ? ' (' + T('הקלטה שלי') + ')' : '');
-      restB.disabled = !userPcm[kit + ':' + sel];
+      restB.hidden = !userPcm[kit + ':' + sel];
+      if (!micB.classList.contains('on')) micB.querySelector('.bt-lbl').textContent = T('הקלטה לפד') + ': ' + padName(sel);
     }
     function paintPlay() {
       playB.querySelector('.bt-lbl').textContent = playing ? T('עצור') : T('נגן');
@@ -615,7 +629,7 @@
     /* ---------- recording your own sound ---------- */
     let rec = null;
     function paintRec() {
-      const on = !!rec; micB.querySelector('.bt-lbl').textContent = on ? T('עצירת ההקלטה') : T('הקלטה לפד');
+      const on = !!rec; micB.querySelector('.bt-lbl').textContent = on ? T('עצירת ההקלטה') : T('הקלטה לפד') + ': ' + padName(sel);
       micB.querySelector('svg').innerHTML = on ? ICON.stop : ICON.mic;
       micB.classList.toggle('on', on); root.classList.toggle('is-rec', on);
       meter.firstChild.style.width = '0%';
