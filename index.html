@@ -1310,6 +1310,22 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
   .bt.is-full .bt-views { grid-row: 2; }
   .bt.is-full .bt-looper, .bt.is-full .bt-seqbox, .bt.is-full .bt-sampler { grid-row: 3; }
 }
+/* ---------- one look for everything that opens (v46) ----------
+   every chip, pill, picker and list is 44px tall; every label above a choice looks the same;
+   every folding list uses the same card, weight and chevron; every opening panel has the same corners */
+.chips button, .seg button, .pick-btn, .select, .btn-quiet { min-height: 44px; }
+.select { border: 1px solid var(--border); padding-inline: var(--s4); }
+.seg-label, .row-label, .lib-head h4 { font-size: var(--fs-xs); font-weight: 600; color: var(--muted); letter-spacing: .02em; text-transform: none; }
+.panel .seg-label, .pop .seg-label, .mixer .seg-label { color: var(--muted); }
+.panel, .mixer { border-radius: var(--r3); border: 1px solid rgba(246, 231, 212, .06); }
+.path-lv > summary, .style-fam.fold > summary { min-height: 48px; font-weight: 600; font-size: var(--fs-b); }
+.path-lv > summary::after, .style-fam.fold > summary::after { width: 8px; height: 8px; transition: transform var(--t-mid) var(--ease); }
+.chrom-more > summary { list-style: none; gap: var(--s2); color: var(--text); font-weight: 600; }
+.chrom-more > summary::-webkit-details-marker { display: none; }
+.chrom-more > summary::after { content: "" / ""; width: 8px; height: 8px; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg); margin-inline-start: var(--s1); transition: transform var(--t-mid) var(--ease); flex: none; }
+.chrom-more[open] > summary::after { transform: rotate(-135deg); }
+.adv-set > summary, .lp-sync > summary { font-weight: 600; }
+.more-val, .tuner-pick .tp-l { color: var(--muted); }
 </style>
 <script>
   (function () {
