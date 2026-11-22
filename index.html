@@ -1659,9 +1659,14 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
           <label class="seg-label" for="custom-chords" id="custom-help"></label>
           <textarea id="custom-chords" rows="2" dir="ltr" lang="en" spellcheck="false"></textarea>
           <p class="status-line" id="custom-status" role="status"></p>
-          <span class="seg-label" id="l-cfeel" style="margin-top: var(--s4)">סגנון הליווי</span>
-          <div class="chips wrap" id="custom-genres" role="group" aria-labelledby="l-cfeel"></div>
-          <div id="custom-groove-field" style="margin-top: var(--s3)"><span class="seg-label" id="l-cgroove">גרוב</span><div class="seg" id="custom-grooves" role="group" aria-labelledby="l-cgroove"></div></div>
+          <div class="toolbar" style="margin-top: var(--s4)">
+            <div class="pop-wrap">
+              <span class="seg-label" id="l-cfeel">סגנון הליווי</span>
+              <button type="button" class="pick-btn" id="cfeel-btn" aria-expanded="false" aria-controls="cfeel-pop" aria-labelledby="l-cfeel cfeel-val"><span id="cfeel-val"></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <div class="pop pop-wide" id="cfeel-pop" hidden><div class="chips wrap" id="custom-genres" role="group" aria-labelledby="l-cfeel"></div></div>
+            </div>
+            <div id="custom-groove-field"><span class="seg-label" id="l-cgroove">גרוב</span><div class="seg" id="custom-grooves" role="group" aria-labelledby="l-cgroove"></div></div>
+          </div>
         </section>
         <details class="more" id="jam-more">
           <summary>דרון וכלי הקשה <span class="more-val" id="jam-more-val"></span></summary>
@@ -5548,6 +5553,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     const base = STYLES.find(x => x.id === v); J.feel = v + ':' + (base.variants ? base.variants[0].id : ''); renderFeel(); feelChanged();
   });
   renderFeel();
+  const cFeelPop = wirePop('cfeel-btn', 'cfeel-pop', 'cfeel-val', '#custom-genres button', () => STYLES.find(x => x.id === J.feel.split(':')[0]).he);
   $('custom-help').textContent = CUSTOM_HELP.chords;
   chordsIn.value = CUSTOM_TEXT.chords;
   applyCustom();
@@ -5574,7 +5580,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
       const [fid, vid] = String(p.get('f') || '').split(':'), west = STYLES.filter(x => x.fam === 'west' && x.id !== 'custom'), fb = west.find(x => x.id === fid);
       if (fb) {
         J.feel = fid + ':' + (fb.variants ? (fb.variants.some(v => v.id === vid) ? vid : fb.variants[0].id) : '');
-        $('custom-genres').querySelectorAll('button').forEach((b, k) => b.setAttribute('aria-pressed', String(west[k] === fb))); renderFeel();
+        $('custom-genres').querySelectorAll('button').forEach((b, k) => b.setAttribute('aria-pressed', String(west[k] === fb))); renderFeel(); cFeelPop.sync();
       }
       J.customMode = cm; $('custom-mode').querySelectorAll('button').forEach((b, k) => b.setAttribute('aria-pressed', String(k === (cm === 'degrees' ? 1 : 0))));
       $('custom-help').textContent = CUSTOM_HELP[cm];
