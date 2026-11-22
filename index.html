@@ -261,6 +261,11 @@ img.ico { object-fit: contain; }
 .p-sound { margin: 0 0 var(--s2); }
 .p-sound > div { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
 .p-sound .seg-label { margin: 0; }
+/* the tuning list reads as something to change: accent outline, a clear down arrow, full touch size */
+#tuner-tunings { -webkit-appearance: none; appearance: none; min-height: 48px; min-width: min(100%, 260px); padding-inline: var(--s4) 48px; border: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-2)) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%239B6CFF' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center / 22px; font-size: var(--fs-s); cursor: pointer; }
+[dir="rtl"] #tuner-tunings { padding-inline: var(--s4) 48px; background-position: left 14px center; }
+#tuner-tunings:hover { background-color: color-mix(in srgb, var(--accent) 26%, var(--surface-2)); }
 .seg-label { display: block; margin-bottom: var(--s2); font-size: var(--fs-xs); font-weight: 600; color: var(--muted); letter-spacing: 0.02em; }
 .toolbar { display: flex; flex-wrap: wrap; gap: var(--s4) var(--s5); align-items: flex-end; }
 .select {
@@ -678,7 +683,7 @@ details.more[open] > summary { margin-bottom: var(--s3); }
 .key { position: absolute; top: 0; margin: 0; padding: 0; display: flex; align-items: flex-end; justify-content: center; }
 .key.white { height: 100%; background: #FBF9F2; border: 1px solid #8E8A80; border-top: 0; border-radius: 0 0 6px 6px; padding-bottom: 10px; z-index: 1; }
 .key.black { height: 62%; background: #15141A; border: 0; border-radius: 0 0 5px 5px; padding-bottom: 6px; z-index: 2; }
-.key.white:not(.on):hover { background: #ECE8DC; } .key.black:not(.on):hover { background: #34323E; }
+@media (hover: hover) and (pointer: fine) { .key.white:not(.on):hover { background: #ECE8DC; } .key.black:not(.on):hover { background: #34323E; } }
 .key:focus-visible { z-index: 4; }
 
 /* practice */
@@ -1796,6 +1801,12 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
   const svgIcon = (k, cls) => ICON_FILE[k] ? `<img class="${cls || 'ico'}" src="icons/icon-${ICON_FILE[k]}.svg" alt="" width="24" height="24">` : `<svg class="${cls || 'ico'}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICON[k] || ''}</svg>`;
   const rand = n => Math.floor(Math.random() * n);
   const pick = a => a[rand(a.length)];
+  /* a phone sends a "click" after every touch, and with two fingers held it can land on the key between them.
+     Instruments already play on pointerdown, so a click right after any touch is an echo and is ignored;
+     keyboard and screen-reader activation (no touch before it) still plays. */
+  let lastTouch = 0;
+  ['pointerdown', 'pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, e => { if (e.pointerType !== 'mouse') lastTouch = performance.now(); }, true));
+  const tapEcho = b => (b._ptr && performance.now() - b._ptr < 700) || performance.now() - lastTouch < 800;
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const en = (t, cls) => `<span lang="en" dir="ltr"${cls ? ` class="${cls}"` : ''}>${t}</span>`;
 
@@ -6300,7 +6311,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     try { ring = localStorage.getItem('soniq-bass-mute') !== '1'; names = localStorage.getItem('soniq-bass-names') === '1'; } catch (e) { /* no storage */ }
     const voices = {};  // string -> { src, g }
     const owner = new Map();  // pointerId -> last cell, for slides and lifting the finger
-    const neck = makeNeck('bass', c => { if (c.btn._ptr && performance.now() - c.btn._ptr < 700) return; strike(c); }, T('צוואר בס לנגינה'));
+    const neck = makeNeck('bass', c => { if (tapEcho(c.btn)) return; strike(c); }, T('צוואר בס לנגינה'));
     neck.el.classList.add('neck-play');
     const stage = h('div', { class: 'bp-stage' }, neck.el);
     const status = h('p', { class: 'status-line', role: 'status' });
@@ -6441,7 +6452,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
         b.setAttribute('aria-label', T`קליד ${disp(name)}, אוקטבה ${oct}`);
         if (names && !black) b.appendChild(h('span', { class: 'kname', 'aria-hidden': 'true', lang: 'en' }, disp(name) + (m % 12 === 0 ? oct : '')));
         const c = { btn: b, midi: m, i: m - lo }; cells.push(c); kb.appendChild(b);
-        b.addEventListener('click', () => { if (b._ptr && performance.now() - b._ptr < 700) return; strike(c); setTimeout(() => release(c), 600); });
+        b.addEventListener('click', () => { if (tapEcho(b)) return; strike(c); setTimeout(() => release(c), 600); });
       }
       const f = cells.find(c => c.midi % 12 === 0) || cells[0]; f.btn.tabIndex = 0;
       down.disabled = lo <= 24; up.disabled = lo >= 72;
@@ -6596,7 +6607,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
         b.setAttribute('aria-label', ch.own ? T`אקורד ${ch.name}, ${ch.roman}` : T`אקורד ${ch.name}, דרגה ${ch.roman}`);
         if (ch.own) { b.classList.add('own'); b.textContent = ''; b.append(h('b', { lang: 'en', dir: 'ltr' }, ch.name), h('span', {}, ch.roman)); }
         b.addEventListener('pointerdown', e => { if (e.button > 0) return; b._ptr = performance.now(); pick(d, true); });
-        b.addEventListener('click', () => { if (b._ptr && performance.now() - b._ptr < 700) return; pick(d, true); });
+        b.addEventListener('click', () => { if (tapEcho(b)) return; pick(d, true); });
         chordsEl.appendChild(b); btns.push(b);
       });
       labelStrings();
@@ -6667,7 +6678,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
       last.set(e.pointerId, i);
     });
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => strings.addEventListener(t, e => last.delete(e.pointerId)));
-    strBtns.forEach((b, i) => b.addEventListener('click', () => { if (b._ptr && performance.now() - b._ptr < 700) return; pluck(i, 0, 0.6); }));
+    strBtns.forEach((b, i) => b.addEventListener('click', () => { if (tapEcho(b)) return; pluck(i, 0, 0.6); }));
     strings.addEventListener('touchstart', e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
     // number keys strum the chords while the guitar has focus
     root_.addEventListener('keydown', e => {
