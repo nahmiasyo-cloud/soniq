@@ -4894,14 +4894,14 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
           comp: { sf: 'vibraphone', lo: 62, rootless: true, hits: [[3, 0.2, 0.2], [10, 0.3, 0.22]] },
           comp2: { sf: 'brass_section', lo: 55, rootless: true, hits: [[0, 0.5, 0.24]] },
           scales: [['tizitamin', T("טיזיטה מינור")], ['pmin', T("פנטטוני מינור")], ['dorian', T("דורי")]] },
-        // the major side: an Ethiopian 12/8 groove (kebero-style conga, the chik-chika hi-hat) moving from I major to
-        // ii minor, so Tizita major and the other major qenets fit over it
-        { id: 'tizitamaj', he: T("טיזיטה מז'ור, I ל-ii"), bpm: 84,
+        // the major side, straight and groovy (Ethio-jazz rarely swings outside the ballads): a 4/4 sixteenth groove,
+        // congas and shaker, I major to ii minor, so Tizita major and the other major qenets fit over it
+        { id: 'tizitamaj', he: T("טיזיטה מז'ור, I ל-ii"), meter: '4/4', steps: 16, spb: 4, bpm: 96, swing: 0, bass: 'afrobeat',
           prog: [['1', 'maj7'], ['1', 'maj7'], ['2', 'm7'], ['2', 'm7']],
-          kit: [['kick', [0, 6], 0.75], ['kick', [9], 0.3], ['cross', [3, 9], 0.42], ['hatC', [0, 2, 3, 5, 6, 8, 9, 11], 0.22],
-            ['congaL', [0, 6], 0.4], ['congaO', [2, 4, 8, 10], 0.32], ['congaS', [3, 9], 0.26], ['shaker', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 0.08]],
-          comp: { sf: 'vibraphone', lo: 60, arp: true, hits: [[0, 0.5, 0.24], [2, 0.4, 0.2], [3, 0.4, 0.22], [5, 0.4, 0.2], [6, 0.5, 0.24], [8, 0.4, 0.2], [9, 0.4, 0.22], [11, 0.4, 0.2]] },
-          comp2: { sf: 'electric_guitar_clean', lo: 62, rootless: true, hits: [[3, 0.15, 0.16], [9, 0.15, 0.16]] },
+          kit: [['kick', [0, 6, 10], 0.75], ['snare', [4, 12], 0.5], ['snare', [7, 15], 0.1], ['hatC', [0, 2, 4, 6, 8, 10, 12, 14], 0.26], ['hatC', [3, 11], 0.12],
+            ['congaO', [2, 6, 14], 0.32], ['congaS', [4, 12], 0.24], ['congaL', [8], 0.3], ['shaker', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], 0.08]],
+          comp: { sf: 'vibraphone', lo: 60, arp: true, hits: [[0, 0.4, 0.24], [3, 0.3, 0.2], [6, 0.4, 0.22], [8, 0.4, 0.24], [11, 0.3, 0.2], [14, 0.4, 0.22]] },
+          comp2: { sf: 'electric_guitar_clean', lo: 62, rootless: true, hits: [[2, 0.12, 0.16], [6, 0.12, 0.14], [10, 0.12, 0.16], [14, 0.12, 0.14]] },
           scales: [['tizita', T("טיזיטה (מז'ור)")], ['bati', T('באטי / ריוקיו')], ['pmaj', T("פנטטוני מז'ור")], ['major', T("מז'ור")]] }
       ] },
     // bluegrass, the way a band like the Tony Rice Unit or the Bluegrass Album Band sits: the upright bass on 1 and 3,
@@ -4964,6 +4964,9 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
       ] }
   ];
   STYLES.forEach(s => { if (s.pat) { s.tokens = s.pat.split(' '); s.steps = s.tokens.length; } });
+  // no backing track starts below 90 BPM (the tempo can still be lowered by hand); compound meters (6/8, 12/8,
+  // counted in dotted quarters) keep their own tempo, since 90 there would double a ballad's speed
+  STYLES.forEach(s => [s].concat(s.variants || []).forEach(x => { const spb = x.spb || s.spb; if (x.bpm && x.bpm < 90 && spb !== 3 && spb !== 6) x.bpm = 90; }));
   const POW = { deg: ['1', '5', '8'], sym: '5' };
   function roman(deg, q) {
     if (String(deg).includes('/')) {
