@@ -414,6 +414,7 @@ html.sheet-open, html.sheet-open body { overflow: hidden; }
 }
 /* calmer layout: panels that open on demand */
 .toolbar .push { margin-inline-start: auto; }
+.head-picks { margin: var(--s2) 0 var(--s3); gap: var(--s3) var(--s4); }
 .btn-ico { display: inline-flex; align-items: center; gap: var(--s2); }
 .btn-ico .ico { width: 18px; height: 18px; }
 .panel { background: var(--surface-2); border-radius: var(--r2); padding: var(--s4); }
@@ -1394,6 +1395,24 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
         <div class="view-head">
           <div>
             <p class="eyebrow" id="r-eyebrow"></p>
+            <div class="toolbar head-picks">
+              <div class="pop-wrap">
+                <span class="seg-label" id="l-roots">טוניקה</span>
+                <button type="button" class="pick-btn" id="roots-btn" aria-expanded="false" aria-controls="roots-pop" aria-labelledby="l-roots roots-val"><span id="roots-val"></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <div class="pop" id="roots-pop" hidden><div class="note-grid mono" id="roots" dir="ltr" role="group" aria-labelledby="l-roots"></div></div>
+              </div>
+              <div class="pop-wrap">
+                <span class="seg-label" id="l-item">מה מציגים</span>
+                <button type="button" class="pick-btn pick-item" id="item-btn" aria-expanded="false" aria-controls="item-pop" aria-labelledby="l-item item-val"><span id="item-val"></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <div class="pop pop-lib" id="item-pop" hidden>
+                  <div class="seg lib-tabs" id="cats" role="group" aria-label="מה מציגים"></div>
+                  <label class="sr-only" for="item-q">חיפוש בספרייה</label>
+                  <input type="search" id="item-q" class="lib-search" autocomplete="off" spellcheck="false">
+                  <div class="lib" id="item-lib"></div>
+                  <p class="lib-empty" id="item-empty" role="status"></p>
+                </div>
+              </div>
+            </div>
             <h2 class="view-title" id="r-title"></h2>
             <dl class="facts" id="r-facts"></dl>
             <p class="desc" id="r-desc"></p>
@@ -1409,22 +1428,6 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
         <p class="sr-only" role="status" id="map-status"></p>
 
         <div class="toolbar">
-          <div class="pop-wrap">
-            <span class="seg-label" id="l-roots">טוניקה</span>
-            <button type="button" class="pick-btn" id="roots-btn" aria-expanded="false" aria-controls="roots-pop" aria-labelledby="l-roots roots-val"><span id="roots-val"></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-            <div class="pop" id="roots-pop" hidden><div class="note-grid mono" id="roots" dir="ltr" role="group" aria-labelledby="l-roots"></div></div>
-          </div>
-          <div class="pop-wrap">
-            <span class="seg-label" id="l-item">מה מציגים</span>
-            <button type="button" class="pick-btn pick-item" id="item-btn" aria-expanded="false" aria-controls="item-pop" aria-labelledby="l-item item-val"><span id="item-val"></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-            <div class="pop pop-lib" id="item-pop" hidden>
-              <div class="seg lib-tabs" id="cats" role="group" aria-label="מה מציגים"></div>
-              <label class="sr-only" for="item-q">חיפוש בספרייה</label>
-              <input type="search" id="item-q" class="lib-search" autocomplete="off" spellcheck="false">
-              <div class="lib" id="item-lib"></div>
-              <p class="lib-empty" id="item-empty" role="status"></p>
-            </div>
-          </div>
           <div class="push share-wrap"><p class="share-msg" id="map-share-msg" role="status"></p><button type="button" class="btn-quiet btn-ico" id="map-share" aria-label="שיתוף המפה הזו בקישור"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="18" cy="5" r="2.6" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="6" cy="12" r="2.6" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="18" cy="19" r="2.6" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4" stroke="currentColor" stroke-width="2"/></svg><span class="sr-only-sm">שיתוף</span></button><button type="button" class="btn-quiet btn-ico" id="map-opts-btn" aria-expanded="false" aria-controls="map-opts"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.4" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="10" cy="17" r="2.4" stroke="currentColor" stroke-width="2" fill="none"/></svg>תצוגה</button></div>
         </div>
         <div class="toolbar panel" id="map-opts" hidden>
