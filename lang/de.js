@@ -25,3 +25,5 @@ Object.assign(window.SONIQ_DICT, {"אוקטבות על הצוואר": "Oktaven a
 Object.assign(window.SONIQ_DICT, {"רישיונות וקרדיטים": "Lizenzen und Credits"});
 Object.assign(window.SONIQ_DICT, {"מזרח פוגש מערב": "Ost trifft West", "רוק אנטולי": "Anatolischer Rock", "טורקיה, שנות ה-70": "Türkei, 1970er", "רוק, I–II": "Rock, I–II", "פאנק טורקי, I–II–III–II": "Türkischer Funk, I–II–III–II", "עולה, I–II–III–IV": "Aufsteigend, I–II–III–IV", "צ'יפטטלי על תופים": "Çiftetelli am Schlagzeug", "יווני-מזרחי": "Griechisch-orientalisch", "בסגנון אריס סאן": "Im Stil von Aris San", "צ'יפטטלי, I עד IV ובחזרה": "Tsifteteli, von I bis IV und zurück", "חסאפיקו מהיר, I–II": "Schneller Hasapiko, I–II", "חיג'אז מז'ור, I–II": "Hijaz-Dur, I–II"});
 Object.assign(window.SONIQ_DICT, {"דאבל טיים, I–II": "Double Time, I–II"});
+Object.assign(window.SONIQ_DICT, {"קרשילמה 9/8, I–II": "Karşılama 9/8, I–II", "סרף-בלקן מהיר, I–II": "Schneller Balkan-Surf, I–II"});
+Object.assign(window.SONIQ_DICT, {"עולה ויורד, I–II–III–II": "Auf und ab, I–II–III–II", "צ'יפטטלי, I עד III ובחזרה": "Tsifteteli, von I bis III und zurück", "פאנק יווני": "Griechischer Funk"});
