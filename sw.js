@@ -3,7 +3,7 @@
    instrument samples (sounds/fluidr3/) are saved the first time they load, so every sound you have
    played once also works offline.
    Pages: network first (so updates arrive), then the saved copy. */
-const VERSION = 'soniq-v60';
+const VERSION = 'soniq-v61';
 const SHELL = VERSION + '-shell', RUNTIME = 'soniq-runtime';
 const PRECACHE = [
  "./",
@@ -86,7 +86,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (req.mode === 'navigate') {
     // the page itself: try the network, fall back to the saved app (shared links keep their ?query)
-    e.respondWith(fetch(req).then(res => {
+    e.respondWith(fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }).then(res => {
       const copy = res.clone(); caches.open(SHELL).then(c => c.put('index.html', copy)); return res;
     }).catch(() => caches.match('index.html', { ignoreSearch: true }).then(r => r || caches.match('./'))));
     return;
