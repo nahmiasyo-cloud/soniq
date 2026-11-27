@@ -536,6 +536,7 @@ details.more[open] > summary { margin-bottom: var(--s3); }
 .tuner-ctl button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .chrom-more { margin-top: var(--s4); }
 .mic-site { margin: var(--s3) 0 0; text-align: center; }
+.tu-debug { margin: var(--s2) 0 0; font: 12px/1.5 ui-monospace, monospace; text-align: center; color: var(--text); word-break: break-word; }
 .mic-site a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s4); border-radius: 999px; background: var(--grad-cta); color: var(--on-accent); font-weight: 600; text-decoration: none; }
 .mic-site a:hover { filter: brightness(1.08); }
 .chrom-more summary { cursor: pointer; color: var(--muted); font-size: var(--fs-s); min-height: 44px; display: flex; align-items: center; }
@@ -1555,6 +1556,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
             <div class="tuner-ctl">
               <button type="button" class="btn-quiet btn-ico" id="tg-mic" aria-pressed="false"><img class="ico" src="icons/icon-microphone.svg" alt="" width="24" height="24"><span>האזנה</span></button>
             </div>
+            <p class="tu-debug" id="tu-debug" dir="ltr" lang="en" hidden></p>
             <details class="more tuner-more"><summary>אפשרויות טיונר</summary>
             <div class="tuner-ctl">
               <button type="button" class="btn-quiet btn-ico" id="tg-loop" aria-pressed="false"><img class="ico" src="icons/icon-loop.svg" alt="" width="24" height="24"><span>צליל רציף</span></button>
@@ -6240,6 +6242,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
   }
   function listenTick() {
     const M = TU.mic; if (!M) return;
+    if (TU.dbg) tuDebug(M);
     if (M.ac.state !== 'running') { try { const p = M.ac.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* needs a touch */ } micWatch(M); if (TU.mic === M) say(T('הקישו על המסך כדי להתחיל להאזין.')); return; }
     M.an.getFloatTimeDomainData(M.buf);
     const r = detectPitch(M.buf, M.ac.sampleRate);
@@ -6275,6 +6278,14 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     [f / 2, f * 2].forEach(g => { if (Math.abs(centsOff(g, tm)) + 12 < Math.abs(centsOff(ff, tm))) ff = g; });
     const c = centsOff(ff, tm); showGauge(c, ff); checkTuned(c);
   }
+  // diagnostics for a phone where the tuner fails: open the site with ?debug and send a screenshot
+  TU.dbg = /[?&]debug/.test(location.search);
+  function tuDebug(M) {
+    const el = $('tu-debug'); el.hidden = false;
+    const st = M.track && M.track.getSettings ? M.track.getSettings() : {};
+    el.textContent = 'ctx ' + M.ac.state + ' ' + M.ac.sampleRate + 'Hz · mic ' + (M.track ? M.track.readyState + (M.track.muted ? ' muted' : '') : 'none') + ' ' + (st.sampleRate || '?') + 'Hz' +
+      ' · session ' + (AS ? AS.type : '-') + ' · rms ' + (TU.rms || 0).toFixed(4) + ' gate ' + Math.max(0.0005, TU.floor * 2.5).toFixed(4) + ' · f ' + (TU.smooth ? TU.smooth.toFixed(1) : '-') + ' · restarts ' + (TU.restarts || 0);
+  }
   function checkTuned(c) {
     if (Math.abs(c) < 5) {
       if (++TU.okRun === 8 && !TU.tuned.has(TU.sel)) { TU.tuned.add(TU.sel); selectString(TU.sel); chime(); say(T`מיתר ${strNo(TU.sel)} מכוון ✓`, true); }
@@ -6295,11 +6306,15 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     const C = window.AudioContext || window.webkitAudioContext;
     if (!C || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return micUnavailable();
     TU.starting = true;
+    // the sound engine is made (or woken) right now, before waiting for the microphone, while the tap on "Listen"
+    // still counts: iOS lets sound start only inside a touch, and a context made after the wait often stays asleep.
+    // A restart keeps the context it already has and only swaps the microphone stream.
+    try { if (AS) AS.type = 'play-and-record'; } catch (e) { /* older Safari */ }
+    let ac = TU.keep && TU.keep.state !== 'closed' ? TU.keep : null; TU.keep = null;
+    try { if (!ac) ac = new C(); const p = ac.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* needs a touch */ }
     try {
-      try { if (AS) AS.type = 'play-and-record'; } catch (e) { /* older Safari */ }
       const stream = await openStream();
-      if (!/tools/.test(location.hash) || !$('tool-inst').hidden) { stream.getTracks().forEach(t => t.stop()); return; }
-      const ac = new C(); try { const p = ac.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* needs a touch */ }
+      if (!/tools/.test(location.hash) || !$('tool-inst').hidden) { stream.getTracks().forEach(t => t.stop()); try { ac.close(); } catch (e) { /* gone */ } setSession(idleSession()); return; }
       ac.onstatechange = () => { if (TU.mic && TU.mic.ac === ac && ac.state !== 'running' && !document.hidden) { try { const p = ac.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* ignore */ } } };
       const src = ac.createMediaStreamSource(stream), an = ac.createAnalyser(), sink = ac.createGain();
       an.fftSize = 8192; sink.gain.value = 0; src.connect(an); an.connect(sink); sink.connect(ac.destination);
@@ -6313,6 +6328,7 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
       else say(isChrom() ? T('מקשיב. נגנו צליל ארוך ויציב.') : T('מקשיב. נגנו מיתר אחד בכל פעם.'), true);
     } catch (e) {
       // a restart that fails (the microphone is busy elsewhere) keeps the setting, so the tuner listens again on return
+      try { ac.close(); } catch (er) { /* gone */ }
       setSession(idleSession());
       const name = e && e.name;
       if (again) { $('tg-mic').setAttribute('aria-pressed', 'false'); say(T('המיקרופון תפוס כרגע. חזרו לכאן כדי להאזין שוב.'), true); }
@@ -6322,24 +6338,27 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     }
     finally { TU.starting = false; }
   }
-  function stopMic() {
+  // keep: a restart, which reuses the running sound engine and keeps the recording session
+  function stopMic(keep) {
     const M = TU.mic; if (!M) return; clearInterval(M.timer); M.stream.getTracks().forEach(t => t.stop());
     [M.src, M.an, M.sink].forEach(x => { try { x.disconnect(); } catch (e) { /* gone */ } });
-    M.ac.onstatechange = null; try { M.ac.close(); } catch (e) { /* gone */ }
-    setSession(idleSession());
+    M.ac.onstatechange = null;
+    if (keep) TU.keep = M.ac;
+    else { try { M.ac.close(); } catch (e) { /* gone */ } setSession(idleSession()); }
     TU.mic = null; $('tg-mic').setAttribute('aria-pressed', 'false'); showGauge(null);
   }
   // a fresh start, at most every few seconds, so a broken stream is replaced without the user noticing
-  function restartMic() {
+  // fresh: also a new sound engine, only when the old one is stuck "interrupted"
+  function restartMic(fresh) {
     const t = performance.now(); if (t - (TU.restarted || 0) < 4000) return;
-    TU.restarted = t; stopMic(); startMic(true);
+    TU.restarted = t; TU.restarts = (TU.restarts || 0) + 1; stopMic(!fresh); startMic(true);
   }
   // the phone may pause sound (a call, the lock screen, another app): wake it, and replace a stream that went silent
   function micWatch(M) {
     if (M.ac.state !== 'running') {
       // iOS can leave a context "interrupted" for good (WebKit 273511): after about 2 seconds on screen, start afresh
       M.stuck = document.hidden ? 0 : (M.stuck || 0) + 1;
-      if (M.stuck > 50 && M.ac.state === 'interrupted') { M.stuck = 0; restartMic(); }
+      if (M.stuck > 50 && M.ac.state === 'interrupted') { M.stuck = 0; restartMic(true); }
       return;
     }
     M.stuck = 0;
