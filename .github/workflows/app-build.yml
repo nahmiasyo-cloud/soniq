@@ -58,6 +58,7 @@ jobs:
           ./gradlew --no-daemon assembleDebug bundleRelease 2>&1 | tee -a ../../logs/android-build.txt
           mkdir -p ../../out
           cp app/build/outputs/apk/debug/app-debug.apk ../../out/SONIQ-test.apk
+          cp app/build/outputs/bundle/release/app-release.aab ../../out/SONIQ-unsigned.aab
 
       - name: Sign release bundle
         if: env.ANDROID_KEY_PASS != ''
