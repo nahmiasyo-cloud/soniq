@@ -1,0 +1,161 @@
+name: App build (Android + iOS)
+
+on:
+  push:
+    branches: [app]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_KEY_PASS: ${{ secrets.ANDROID_KEY_PASS }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}" }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+
+      - name: Prepare web files
+        run: bash .github/scripts/prepare-www.sh
+
+      - name: Add Android platform
+        working-directory: app
+        run: |
+          mkdir -p ../logs
+          {
+            npm install --no-audit --no-fund @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest @capacitor/assets@latest
+            npx cap add android
+            npx @capacitor/assets generate --android --iconBackgroundColor '#0E0912' --iconBackgroundColorDark '#0E0912' --splashBackgroundColor '#0E0912' --splashBackgroundColorDark '#0E0912'
+            npx cap sync android
+          } 2>&1 | tee ../logs/android-setup.txt
+
+      - name: Permissions and version
+        working-directory: app/android
+        run: |
+          MAN=app/src/main/AndroidManifest.xml
+          grep -q RECORD_AUDIO "$MAN" || sed -i 's#</manifest>#    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n</manifest>#' "$MAN"
+          sed -i -E "s/versionCode [0-9]+/versionCode ${{ github.run_number }}/; s/versionName \"[^\"]*\"/versionName \"1.0.${{ github.run_number }}\"/" app/build.gradle
+          grep -E "versionCode|versionName|targetSdk" app/build.gradle variables.gradle || true
+          cat "$MAN"
+
+      - name: Build
+        working-directory: app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug bundleRelease 2>&1 | tee -a ../../logs/android-build.txt
+          mkdir -p ../../out
+          cp app/build/outputs/apk/debug/app-debug.apk ../../out/SONIQ-test.apk
+
+      - name: Sign release bundle
+        if: env.ANDROID_KEY_PASS != ''
+        run: |
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in app/upload.jks.enc -out upload.jks -pass env:ANDROID_KEY_PASS
+          cp app/android/app/build/outputs/bundle/release/app-release.aab out/SONIQ.aab
+          jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore upload.jks -storepass "$ANDROID_KEY_PASS" -keypass "$ANDROID_KEY_PASS" out/SONIQ.aab upload
+          jarsigner -verify out/SONIQ.aab | tail -1
+          rm -f upload.jks
+
+      - name: Publish to release
+        if: always()
+        run: |
+          TAG=android-build
+          gh release view $TAG >/dev/null 2>&1 || gh release create $TAG --prerelease --title "Android build" --notes "Automatic build from the app branch."
+          gh release edit $TAG --notes "Build #${{ github.run_number }} – ${{ job.status }} – $(date -u +%F' '%H:%M) UTC"
+          FILES=$(ls out/* logs/* 2>/dev/null || true)
+          [ -n "$FILES" ] && gh release upload $TAG $FILES --clobber
+          echo "${{ job.status }}" > status-android.txt; gh release upload $TAG status-android.txt --clobber
+
+  ios:
+    runs-on: macos-latest
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}" }
+
+      - name: Prepare web files
+        run: bash .github/scripts/prepare-www.sh
+
+      - name: Add iOS platform
+        working-directory: app
+        run: |
+          mkdir -p ../logs
+          {
+            npm install --no-audit --no-fund @capacitor/core@latest @capacitor/cli@latest @capacitor/ios@latest @capacitor/assets@latest
+            npx cap add ios
+            npx @capacitor/assets generate --ios --iconBackgroundColor '#0E0912' --splashBackgroundColor '#0E0912' --splashBackgroundColorDark '#0E0912'
+            npx cap sync ios
+          } 2>&1 | tee ../logs/ios-setup.txt
+
+      - name: Info.plist and version
+        working-directory: app/ios/App
+        run: |
+          PL=App/Info.plist
+          PB=/usr/libexec/PlistBuddy
+          $PB -c "Add :NSMicrophoneUsageDescription string 'SONIQ uses the microphone for the tuner and for recording your own sounds.'" $PL || $PB -c "Set :NSMicrophoneUsageDescription 'SONIQ uses the microphone for the tuner and for recording your own sounds.'" $PL
+          $PB -c "Add :ITSAppUsesNonExemptEncryption bool false" $PL || true
+          $PB -c "Set :CFBundleDisplayName SONIQ" $PL || $PB -c "Add :CFBundleDisplayName string SONIQ" $PL
+          $PB -c "Add :UIBackgroundModes array" $PL || true
+          $PB -c "Add :UIBackgroundModes:0 string audio" $PL || true
+          sed -i '' -E "s/CURRENT_PROJECT_VERSION = [0-9]+;/CURRENT_PROJECT_VERSION = ${{ github.run_number }};/g; s/MARKETING_VERSION = [0-9.]+;/MARKETING_VERSION = 1.0;/g" App.xcodeproj/project.pbxproj
+          ls
+
+      - name: Simulator build (check that it compiles)
+        working-directory: app/ios/App
+        run: |
+          if [ -d App.xcworkspace ]; then SRC="-workspace App.xcworkspace"; else SRC="-project App.xcodeproj"; fi
+          xcodebuild $SRC -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build 2>&1 | tee ../../../logs/ios-sim-build.txt | tail -30
+
+      - name: Archive and upload to TestFlight
+        if: env.ASC_KEY_ID != '' && env.ASC_ISSUER_ID != '' && env.ASC_KEY_P8 != '' && env.APPLE_TEAM_ID != ''
+        working-directory: app/ios/App
+        run: |
+          mkdir -p ~/private_keys
+          KEY=~/private_keys/AuthKey_$ASC_KEY_ID.p8
+          printf '%s\n' "$ASC_KEY_P8" > "$KEY"
+          AUTH="-allowProvisioningUpdates -authenticationKeyPath $KEY -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID"
+          if [ -d App.xcworkspace ]; then SRC="-workspace App.xcworkspace"; else SRC="-project App.xcodeproj"; fi
+          xcodebuild $SRC -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath build/App.xcarchive \
+            DEVELOPMENT_TEAM=$APPLE_TEAM_ID CODE_SIGN_STYLE=Automatic $AUTH archive 2>&1 | tee ../../../logs/ios-archive.txt | tail -40
+          cat > ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          EOF
+          sed -i '' 's/^          //' ExportOptions.plist
+          xcodebuild -exportArchive -archivePath build/App.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath build/export $AUTH 2>&1 | tee ../../../logs/ios-upload.txt | tail -40
+          rm -f "$KEY"
+
+      - name: Publish to release
+        if: always()
+        run: |
+          TAG=ios-build
+          gh release view $TAG >/dev/null 2>&1 || gh release create $TAG --prerelease --title "iOS build" --notes "Automatic build from the app branch."
+          gh release edit $TAG --notes "Build #${{ github.run_number }} – ${{ job.status }} – $(date -u +%F' '%H:%M) UTC"
+          FILES=$(ls logs/* 2>/dev/null || true)
+          [ -n "$FILES" ] && gh release upload $TAG $FILES --clobber
+          echo "${{ job.status }}" > status-ios.txt; gh release upload $TAG status-ios.txt --clobber

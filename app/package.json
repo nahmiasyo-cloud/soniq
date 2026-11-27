@@ -1,0 +1,6 @@
+{
+  "name": "soniq-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Native wrapper (Capacitor) for the SONIQ web app"
+}
