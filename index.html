@@ -6279,11 +6279,17 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     const c = centsOff(ff, tm); showGauge(c, ff); checkTuned(c);
   }
   // diagnostics for a phone where the tuner fails: open the site with ?debug and send a screenshot
-  TU.dbg = /[?&]debug/.test(location.search);
+  // in the installed app there is no address bar: five quick taps on the needle turn the line on and off
+  let dbgOn = false; try { dbgOn = localStorage.getItem('soniq-debug') === '1'; } catch (e) { /* private mode */ }
+  TU.dbg = /[?&]debug/.test(location.search) || dbgOn;
+  { let taps = [];
+    $('tg').addEventListener('click', () => { const t = performance.now(); taps = taps.filter(x => t - x < 2500); taps.push(t);
+      if (taps.length < 5) return; taps = []; TU.dbg = !TU.dbg; try { localStorage.setItem('soniq-debug', TU.dbg ? '1' : '0'); } catch (e) { /* private mode */ }
+      const el = $('tu-debug'); if (!TU.dbg) el.hidden = true; else { el.hidden = false; el.textContent = 'v61 · ' + (standalone() ? 'app' : 'site') + (TU.mic ? '' : ' · mic off'); } }); }
   function tuDebug(M) {
     const el = $('tu-debug'); el.hidden = false;
     const st = M.track && M.track.getSettings ? M.track.getSettings() : {};
-    el.textContent = 'ctx ' + M.ac.state + ' ' + M.ac.sampleRate + 'Hz · mic ' + (M.track ? M.track.readyState + (M.track.muted ? ' muted' : '') : 'none') + ' ' + (st.sampleRate || '?') + 'Hz' +
+    el.textContent = 'v61 ' + (standalone() ? 'app' : 'site') + ' · ctx ' + M.ac.state + ' ' + M.ac.sampleRate + 'Hz · mic ' + (M.track ? M.track.readyState + (M.track.muted ? ' muted' : '') : 'none') + ' ' + (st.sampleRate || '?') + 'Hz' +
       ' · session ' + (AS ? AS.type : '-') + ' · rms ' + (TU.rms || 0).toFixed(4) + ' gate ' + Math.max(0.0005, TU.floor * 2.5).toFixed(4) + ' · f ' + (TU.smooth ? TU.smooth.toFixed(1) : '-') + ' · restarts ' + (TU.restarts || 0);
   }
   function checkTuned(c) {
@@ -6375,7 +6381,10 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     say(T('המיקרופון לא זמין בדף הזה. מכוונים לפי האוזן: לוחצים על יתד ומשווים לצליל. כדאי להפעיל "צליל רציף".'), true);
   }
   function setAuto(v) { TU.auto = v; $('tg-auto').setAttribute('aria-pressed', String(v)); }
-  $('tg-mic').addEventListener('click', () => { if (TU.mic) { stopMic(); SET.mic = false; saveSettings(); say(T('ההאזנה הופסקה.'), true); } else startMic(); });
+  $('tg-mic').addEventListener('click', () => {
+    // listening but asleep (started before any touch): this tap wakes it with a fresh start instead of turning it off
+    if (TU.mic && TU.mic.ac.state !== 'running') { stopMic(); startMic(); return; }
+    if (TU.mic) { stopMic(); SET.mic = false; saveSettings(); say(T('ההאזנה הופסקה.'), true); } else startMic(); });
   // once the microphone has been allowed, the tuner listens by itself whenever it is open, like any tuner app
   async function autoListen() {
     if (!SET.mic || TU.mic || !/tools/.test(location.hash) || !$('tool-inst').hidden) return;
@@ -6383,6 +6392,16 @@ html.bt-locked, html.bt-locked body { overflow: hidden; }
     startMic();
   }
   window.addEventListener('hashchange', autoListen); autoListen();
+  // the installed app opens on the tuner and listens by itself, before any touch: iOS keeps such sound asleep.
+  // So until the first touch the tuner only asks for one, and that touch starts listening (a tap on "Listen" does it itself).
+  TU.waitTouch = true;
+  const firstTouch = ev => {
+    if (!TU.waitTouch) return; TU.waitTouch = false;
+    ['touchend', 'click', 'keydown'].forEach(n => document.removeEventListener(n, firstTouch, true));
+    if (ev.target && ev.target.closest && ev.target.closest('#tg-mic')) return;
+    if (TU.mic && TU.mic.ac.state !== 'running') { stopMic(); startMic(); }
+  };
+  ['touchend', 'click', 'keydown'].forEach(n => document.addEventListener(n, firstTouch, { capture: true, passive: true }));
   // a phone keeps sound asleep until the first touch: wake it then
   const micWake = () => { if (TU.mic && TU.mic.ac.state !== 'running') { const p = TU.mic.ac.resume(); if (p && p.catch) p.catch(() => {}); } };
   ['pointerdown', 'touchend', 'keydown'].forEach(ev => document.addEventListener(ev, micWake, { passive: true }));
